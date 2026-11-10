@@ -10,7 +10,7 @@ Your payment is confirmed. Welcome to the Veerly founding cohort.
 
 1. **Take your career assessment:** [assessment link]. It takes about ten minutes.
 2. **Get your Notion systems:** create a free Notion account with this email address. We'll share your Job Hunt OS, Portfolio Builder and Interview Preparation System with you.
-3. **Cohort start:** planned for January 2027. We'll confirm the exact date and schedule.
+3. **Cohort 1 starts:** 1 February 2027, 9:00 AM WAT. We'll send the weekly schedule before the start.
 
 Payment reference: [reference]. Keep this email for your records.
 

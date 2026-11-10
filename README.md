@@ -4,7 +4,7 @@ Next.js 15 (App Router) + TypeScript. A calm, single-page site with a launch cou
 (email and WhatsApp opt-in), Paystack checkout, a post-payment welcome page, Brevo email sync, a WhatsApp
 launch-notification script, and a small admin view. **Nothing is sent or charged until you add your own keys.**
 
-**Design (v5):** "Blue stage, yellow signal" (Lemon Squeezy true blue #0075AD, navy countdown panel, no product imagery) — see `DESIGN.md` for the spec, references and tokens. Built with Tailwind CSS v4,
+**Design (v5–v7):** "Blue stage, yellow signal" (Lemon Squeezy true blue #0075AD, navy countdown panel). v7 adds real screenshots of the Virtual Assistant Career OS — see `DESIGN.md` for the spec, references and tokens. Built with Tailwind CSS v4,
 shadcn/ui (Radix) components in `components/ui/`, and restrained GSAP + ScrollTrigger motion (`components/Motion.tsx`, off for
 `prefers-reduced-motion`). Fonts: Bricolage Grotesque (display) and Geist (body). Previous designs: git tags `v1`, `v2`
 (v1 also in `_v1-archive/`).
@@ -19,16 +19,20 @@ npm run build && npm run start     # production mode on :3210
 
 Preview states:
 
-- `/?preview=launched` shows the page after the countdown ends (checkout), and `/?preview=prelaunch` forces the waitlist.
+- Previews: `/?preview=prelaunch` (before 1 Dec: calm panel, no countdown), `/?preview=promo` (from 1 Dec: countdown to Cohort 1, waitlist only), `/?preview=enrol` (from 1 Jan: checkout open; `/?preview=launched` is the same).
 - `/welcome?preview=paid` shows the post-payment onboarding page.
-- You can force either state site-wide with `NEXT_PUBLIC_LAUNCH_STATE=launched|prelaunch`.
+- You can force a phase site-wide with `NEXT_PUBLIC_LAUNCH_STATE=prelaunch|promo|enrol`.
 
 Checks: `npm run lint` · `npm run typecheck` · `npm test` (13 tests: Paystack signatures, webhook idempotency,
 consent rules, phone normalisation, Brevo sync with mocked fetch, checkout states, ICS) · `npm run screenshots`.
 
 ## How the launch works
 
-- **Countdown:** counts down to `NEXT_PUBLIC_LAUNCH_AT` (default `2026-12-01T09:00:00+01:00`, shown as "1 December 2026, 9:00 AM WAT").
+- **Timeline (`lib/launch.ts`, all 9:00 AM WAT):**
+  - Before 1 Dec 2026: no countdown, waitlist only.
+  - 1 Dec 2026 (`NEXT_PUBLIC_LAUNCH_AT`): promotion starts and the countdown to Cohort 1 appears. It's still waitlist only.
+  - 1 Jan 2027 (`NEXT_PUBLIC_ENROL_AT`): enrolment and Paystack checkout open. Before this, `/api/checkout` refuses with `enrolment_not_open`.
+  - 1 Feb 2027: Cohort 1 starts (confirmed; `NEXT_PUBLIC_COHORT_START_AT` overrides it). Cohort 2 (1 Mar 2027) and Cohort 3 (5 Apr 2027) are placeholders, followed by the first-Monday fallback.
   It renders on the client to avoid hydration mismatches, keeps a fixed width so the layout doesn't shift, and only
   announces to screen readers once a minute.
 - **At zero,** the page switches by itself: the hero card becomes "Get founding access", the pricing button goes to checkout,
@@ -109,10 +113,16 @@ Only opted-in numbers are messaged. Marketing messages outside a 24-hour chat wi
 per delivered message; utility messages cost $0.0067. New business portfolios can message **250 unique people per rolling 24 hours**.
 That rises to 2,000 after verification or a scaling path, then 10,000 and 100,000 automatically with good quality.
 
+## Prices, currencies and the countdown
+
+- **Prices:** edit `lib/pricing.ts`. It holds one hand-set table for NGN, USD, GBP, EUR, CAD, GHS, KES, ZAR, INR and AUD. There is no live FX. Visitors can pick a currency, and the choice is remembered in their browser.
+- **Checkout currency:** NGN when NGN is picked. Any other currency charges USD only if `PAYSTACK_ENABLE_USD=true`, otherwise NGN. The site shows a short note whenever the shown currency isn't the charged one.
+- **Dates:** edit `lib/launch.ts`, the one timeline config. The countdown logic is in `lib/cohorts.ts`. Before 1 Dec there is a calm "Enrolment opens 1 January 2027" panel. From 1 Dec it counts to the next cohort. If the list runs out, it counts to the first Monday of next month at 9:00 WAT, so it never stops.
+
 ## Payments: Paystack
 
 1. In the hero card (launched state), the buyer enters name and email. `POST /api/checkout` initialises a Paystack transaction with
-   NGN 10,000 by default (`PAYSTACK_AMOUNT_NGN`), metadata (signup id, career path) and `callback_url = <site>/welcome`, then redirects
+   the price from `lib/pricing.ts` (₦10,000 when the visitor picked NGN; otherwise $7.99 if `PAYSTACK_ENABLE_USD=true`, else ₦10,000), metadata (signup id, career path) and `callback_url = <site>/welcome`, then redirects
    to Paystack's hosted checkout.
 2. `/welcome?reference=…` **verifies the transaction on the server** (never trusting the redirect alone), marks the buyer paid, and
    shows next steps: assessment link, Notion access, cohort calendar.
@@ -147,4 +157,18 @@ Set `ADMIN_PASSWORD`, then open `/admin/waitlist` (basic auth, any username). It
 - [ ] Contact email (`NEXT_PUBLIC_CONTACT_EMAIL`) and business details on /privacy and /terms.
 - [ ] Review the /privacy and /terms drafts, and publish the refund and cohort policies.
 - [ ] Paystack live keys, the Brevo lists and templates, and the WhatsApp templates approved.
-- [ ] `NEXT_PUBLIC_ASSESSMENT_URL`, `NEXT_PUBLIC_NOTION_ACCESS_URL` and `NEXT_PUBLIC_COHORT_START_AT` once known.
+- [ ] `NEXT_PUBLIC_ASSESSMENT_URL`, `NEXT_PUBLIC_NOTION_ACCESS_URL` once known.
+
+## v6.3 — Cohort coach (`/coach`, embeddable in Notion)
+
+- **Route:** `/coach` (defaults to Cohort 1) or `/coach?cohort=cohort-2`. `noindex`, no site nav, designed for a ~700px Notion embed and responsive below that.
+- **Flow:** intro card with all cohort expectations grouped by system → "Are you sure you want to start?" confirm → one countdown to the cohort end (yellow tiles on navy), overall progress, "this week" focus, coach note and a free-form checklist → a gentle "Your cohort window has closed" state. Reopening resumes; "Restart" has its own confirm.
+- **Config:** `lib/coach.ts` (cohorts come from `lib/launch.ts`; per-cohort `weeks`, `groups`/expectations, `weeklyFocus`, `setupFocus`, `alignToCohortStart`). Logic tests in `tests/coach.test.ts`.
+- **State:** `localStorage` key `veerly.coach.<cohortId>` (`{startedAt, done[]}`), per browser/device. If an embed's storage is blocked (some browsers partition or block third-party iframe storage), it falls back to memory and says so.
+- **Framing:** `next.config.mjs` sends `Content-Security-Policy: frame-ancestors 'self' https://*.notion.so https://*.notion.site https://app.notion.com https://notion.so` for `/coach` only; every other route sends `frame-ancestors 'self'` + `X-Frame-Options: SAMEORIGIN`.
+- **Embedding in Notion:** once the site is on a public HTTPS URL, type `/embed` in a Notion page and paste `https://<your-domain>/coach` (or `?cohort=cohort-2`). Notion cannot embed `localhost`.
+- **Screenshots:** `python3 scripts/screenshots-coach.py` (prod on :3210) → `screenshots/v6.3-coach-{intro,confirm,active,closed}.png`.
+
+## v7 — Inside your Veerly workspace
+
+Real cropped screenshots of the Virtual Assistant Career OS (the first finished path; the other nine follow the same system) appear after the career-paths grid, in the same calm figure frames as the rest of the page. Assets live in `public/product/` as optimized WebP. `learning-path` and `home-schedule` shots were not used. Screenshots of the new section: `python3 scripts/screenshots.py http://localhost:3210 --prefix v7` and then capture `#workspace` into `screenshots/v7-desktop.png` and `screenshots/v7-mobile.png`.

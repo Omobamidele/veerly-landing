@@ -1,36 +1,51 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { pickCountdownTarget, type CountdownTarget } from "@/lib/cohorts";
+import { phaseAt, type Cohort, type Phase } from "@/lib/launch";
 
 type LaunchState = {
-  launchAtMs: number;
   now: number | null;
+  /** prelaunch (no countdown) → promo (countdown, waitlist only) → enrol (checkout open). */
+  phase: Phase;
+  /** True once enrolment/payment is open (the enrol phase). */
   launched: boolean;
+  promoAtMs: number;
+  enrolAtMs: number;
+  /** Enrolment opening, e.g. "1 January 2027, 9:00 AM WAT". */
   label: string;
+  /** Enrolment opening, short, e.g. "1 Jan". */
   shortLabel: string;
+  /** Next cohort the countdown counts to; null before promotion starts (no countdown shown). */
+  target: CountdownTarget | null;
 };
 const Ctx = createContext<LaunchState | null>(null);
 
 export function LaunchProvider({
-  launchAtIso,
+  promoAtIso,
+  enrolAtIso,
+  cohorts,
   label,
   shortLabel,
-  initialLaunched,
+  initialPhase,
   forced,
   serverNow,
   children,
 }: {
-  launchAtIso: string;
+  promoAtIso: string;
+  enrolAtIso: string;
+  cohorts: Cohort[];
   label: string;
   shortLabel: string;
-  initialLaunched: boolean;
-  /** "launched" | "prelaunch" from ?preview= or env; null = follow the clock */
-  forced: "launched" | "prelaunch" | null;
+  initialPhase: Phase;
+  /** Phase forced by ?preview= or NEXT_PUBLIC_LAUNCH_STATE; null = follow the clock. */
+  forced: Phase | null;
   /** Request time from the server, so the first paint already shows real numbers. */
   serverNow?: number;
   children: React.ReactNode;
 }) {
-  const launchAtMs = new Date(launchAtIso).getTime();
+  const promoAtMs = new Date(promoAtIso).getTime();
+  const enrolAtMs = new Date(enrolAtIso).getTime();
   const [now, setNow] = useState<number | null>(serverNow ?? null);
 
   useEffect(() => {
@@ -39,13 +54,27 @@ export function LaunchProvider({
     return () => clearInterval(t);
   }, []);
 
-  const launched = forced
-    ? forced === "launched"
-    : now === null
-      ? initialLaunched
-      : now >= launchAtMs;
+  const phase: Phase =
+    forced ??
+    (now === null ? initialPhase : phaseAt(now, promoAtMs, enrolAtMs));
   return (
-    <Ctx.Provider value={{ launchAtMs, now, launched, label, shortLabel }}>
+    <Ctx.Provider
+      value={{
+        now,
+        phase,
+        launched: phase === "enrol",
+        promoAtMs,
+        enrolAtMs,
+        label,
+        shortLabel,
+        target: pickCountdownTarget({
+          now: now ?? serverNow ?? promoAtMs,
+          promoAtMs,
+          phase,
+          cohorts,
+        }),
+      }}
+    >
       {children}
     </Ctx.Provider>
   );

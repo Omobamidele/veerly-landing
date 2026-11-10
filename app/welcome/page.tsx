@@ -3,15 +3,22 @@ import Link from "next/link";
 import { CalendarPlus, Check, Clock } from "lucide-react";
 import { Footer, Nav } from "@/components/SiteChrome";
 import { paymentsEnabled, site } from "@/lib/config";
+import { cohortOne, formatWhen } from "@/lib/launch";
 import { processSuccessfulCharge } from "@/lib/payments";
 import { verifyTransaction } from "@/lib/paystack";
 
 export const dynamic = "force-dynamic";
-export const metadata: Metadata = { title: "Welcome", robots: { index: false, follow: false } };
+export const metadata: Metadata = {
+  title: "Welcome",
+  robots: { index: false, follow: false },
+};
 
 type State = "paid" | "pending" | "failed" | "none";
 
-async function resolveState(reference?: string, preview?: string): Promise<State> {
+async function resolveState(
+  reference?: string,
+  preview?: string,
+): Promise<State> {
   if (preview === "paid") return "paid";
   if (!reference || !paymentsEnabled()) return "none";
   try {
@@ -20,17 +27,26 @@ async function resolveState(reference?: string, preview?: string): Promise<State
       const r = await processSuccessfulCharge(tx); // idempotent with the webhook
       return r.ok ? "paid" : "failed";
     }
-    return tx.status === "abandoned" || tx.status === "ongoing" || tx.status === "pending" ? "pending" : "failed";
+    return tx.status === "abandoned" ||
+      tx.status === "ongoing" ||
+      tx.status === "pending"
+      ? "pending"
+      : "failed";
   } catch (err) {
     console.error("[welcome] verify failed", err);
     return "pending";
   }
 }
 
-export default async function Welcome({ searchParams }: { searchParams: Promise<Record<string, string | undefined>> }) {
+export default async function Welcome({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   const sp = await searchParams;
   const state = await resolveState(sp.reference || sp.trxref, sp.preview);
-  const cohortIcs = Boolean(site.cohortStartAt);
+  const c1 = cohortOne();
+  const cohortStart = formatWhen(new Date(c1.startsAt));
 
   return (
     <>
@@ -40,25 +56,34 @@ export default async function Welcome({ searchParams }: { searchParams: Promise<
           {state === "paid" ? (
             <>
               <p className="status-pill ok">
-                <Check size={14} strokeWidth={2.5} aria-hidden="true" /> Payment confirmed
+                <Check size={14} strokeWidth={2.5} aria-hidden="true" /> Payment
+                confirmed
               </p>
               <h1>Welcome to Veerly.</h1>
               <p className="lede">
-                You&rsquo;re in the founding cohort. Here&rsquo;s what happens next.
-                {process.env.BREVO_PAID_TEMPLATE_ID ? " We've also emailed these steps to you." : ""}
+                You&rsquo;re in the founding cohort. Here&rsquo;s what happens
+                next.
+                {process.env.BREVO_PAID_TEMPLATE_ID
+                  ? " We've also emailed these steps to you."
+                  : ""}
               </p>
               <ol className="next-steps">
                 <li>
                   <span className="num">1</span>
                   <div>
                     <h3>Complete your career assessment</h3>
-                    <p>About ten minutes. Your answers shape your personalized plan.</p>
+                    <p>
+                      About ten minutes. Your answers shape your personalized
+                      plan.
+                    </p>
                     {site.assessmentUrl ? (
                       <a className="btn btn-primary" href={site.assessmentUrl}>
                         Start the assessment
                       </a>
                     ) : (
-                      <p className="muted">Your assessment link will arrive by email.</p>
+                      <p className="muted">
+                        Your assessment link will arrive by email.
+                      </p>
                     )}
                   </div>
                 </li>
@@ -67,11 +92,16 @@ export default async function Welcome({ searchParams }: { searchParams: Promise<
                   <div>
                     <h3>Get your three Notion systems</h3>
                     <p>
-                      Create a free Notion account with the same email you paid with. We&rsquo;ll share Job Hunt OS, Portfolio Builder and
-                      the Interview Preparation System with you, personalized to your plan.
+                      Create a free Notion account with the same email you paid
+                      with. We&rsquo;ll share Job Hunt OS, Portfolio Builder and
+                      the Interview Preparation System with you, personalized to
+                      your plan.
                     </p>
                     {site.notionAccessUrl ? (
-                      <a className="btn btn-secondary" href={site.notionAccessUrl}>
+                      <a
+                        className="btn btn-secondary"
+                        href={site.notionAccessUrl}
+                      >
                         Open access instructions
                       </a>
                     ) : null}
@@ -80,11 +110,20 @@ export default async function Welcome({ searchParams }: { searchParams: Promise<
                 <li>
                   <span className="num">3</span>
                   <div>
-                    <h3>Your cohort starts {site.cohortLabel}</h3>
-                    <p>We&rsquo;ll confirm the exact start date and weekly schedule by email and WhatsApp.</p>
-                    {cohortIcs ? (
-                      <a className="btn btn-secondary" href="/api/calendar/cohort.ics">
-                        <CalendarPlus size={16} aria-hidden="true" /> Add to calendar
+                    <h3>
+                      {c1.name} starts {cohortStart}
+                    </h3>
+                    <p>
+                      We&rsquo;ll send the weekly schedule by email and WhatsApp
+                      before the start.
+                    </p>
+                    {c1.startsAt ? (
+                      <a
+                        className="btn btn-secondary"
+                        href="/api/calendar/cohort.ics"
+                      >
+                        <CalendarPlus size={16} aria-hidden="true" /> Add to
+                        calendar
                       </a>
                     ) : null}
                   </div>
@@ -97,20 +136,25 @@ export default async function Welcome({ searchParams }: { searchParams: Promise<
                 <Clock size={14} aria-hidden="true" /> Confirming payment
               </p>
               <h1>We&rsquo;re confirming your payment.</h1>
-              <p className="lede">This usually takes a few seconds. Refresh this page, or check your email for confirmation.</p>
+              <p className="lede">
+                This usually takes a few seconds. Refresh this page, or check
+                your email for confirmation.
+              </p>
             </>
           ) : state === "failed" ? (
             <>
               <h1>Your payment didn&rsquo;t go through.</h1>
               <p className="lede">
-                No money was taken for this attempt. You can <Link href="/#join">try again</Link>.
+                No money was taken for this attempt. You can{" "}
+                <Link href="/#join">try again</Link>.
               </p>
             </>
           ) : (
             <>
               <h1>Welcome to Veerly.</h1>
               <p className="lede">
-                This page confirms founding-cohort payments. If you&rsquo;ve just paid, open the link from your Paystack receipt, or{" "}
+                This page confirms founding-cohort payments. If you&rsquo;ve
+                just paid, open the link from your Paystack receipt, or{" "}
                 <Link href="/#join">return to the homepage</Link>.
               </p>
             </>

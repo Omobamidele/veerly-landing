@@ -2,6 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "./Currency";
 import { useLaunch } from "./LaunchProvider";
 
 export default function PricingCta({
@@ -9,12 +10,13 @@ export default function PricingCta({
 }: {
   paymentsEnabled: boolean;
 }) {
-  const { launched, shortLabel } = useLaunch();
+  const { launched } = useLaunch();
+  const { price } = useCurrency();
   return (
     <div className="flex flex-col items-start gap-3">
       <Button asChild variant="stage" size="lg" className="w-full sm:w-auto">
         <a href="#join-card">
-          {launched ? "Get founding access, $7.99" : "Join the waitlist"}
+          {launched ? `Get founding access, ${price}` : "Join the waitlist"}
           <ArrowRight data-icon="inline-end" />
         </a>
       </Button>
@@ -22,8 +24,8 @@ export default function PricingCta({
         {launched
           ? paymentsEnabled
             ? "Secure checkout by Paystack."
-            : "Payments open at launch."
-          : `Enrolment opens ${shortLabel}. Waitlist members hear first.`}
+            : "Checkout opening shortly."
+          : "Free to join. Waitlist members hear first."}
       </p>
     </div>
   );

@@ -1,5 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { pricing } from "./config";
+import { chargeAmount, type ChargeCurrency } from "./pricing";
 
 /**
  * Paystack (primary payments for Nigeria). Docs:
@@ -12,11 +13,11 @@ import { pricing } from "./config";
 const API = "https://api.paystack.co";
 const env = (k: string) => (process.env[k] || "").trim();
 
-export type Currency = "NGN" | "USD";
+export type Currency = ChargeCurrency;
 
+/** Checkout amount in the subunit (kobo / cents), from the price table in lib/pricing.ts. */
 export function priceFor(currency: Currency) {
-  if (currency === "USD") return { currency, amount: Math.round(pricing.usdAmount * 100) };
-  return { currency: "NGN" as const, amount: Math.round(pricing.ngnAmount * 100) };
+  return { currency, amount: chargeAmount(currency) };
 }
 
 export function allowedCurrencies(): Currency[] {
@@ -30,11 +31,18 @@ export function newReference(signupId: string) {
 async function api<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     ...init,
-    headers: { Authorization: `Bearer ${env("PAYSTACK_SECRET_KEY")}`, "Content-Type": "application/json", ...init?.headers },
+    headers: {
+      Authorization: `Bearer ${env("PAYSTACK_SECRET_KEY")}`,
+      "Content-Type": "application/json",
+      ...init?.headers,
+    },
     cache: "no-store",
   });
   const json = await res.json().catch(() => ({}));
-  if (!res.ok || !json.status) throw new Error(`Paystack ${path} ${res.status}: ${json.message || "error"}`);
+  if (!res.ok || !json.status)
+    throw new Error(
+      `Paystack ${path} ${res.status}: ${json.message || "error"}`,
+    );
   return json.data as T;
 }
 
@@ -46,7 +54,11 @@ export function initializeTransaction(input: {
   callbackUrl: string;
   metadata: Record<string, unknown>;
 }) {
-  return api<{ authorization_url: string; access_code: string; reference: string }>("/transaction/initialize", {
+  return api<{
+    authorization_url: string;
+    access_code: string;
+    reference: string;
+  }>("/transaction/initialize", {
     method: "POST",
     body: JSON.stringify({
       email: input.email,
@@ -70,7 +82,9 @@ export type PaystackTransaction = {
 };
 
 export function verifyTransaction(reference: string) {
-  return api<PaystackTransaction>(`/transaction/verify/${encodeURIComponent(reference)}`);
+  return api<PaystackTransaction>(
+    `/transaction/verify/${encodeURIComponent(reference)}`,
+  );
 }
 
 function safeEqualHex(a: string, b: string) {
@@ -85,7 +99,12 @@ function safeEqualHex(a: string, b: string) {
 export function verifyWebhookSignature(
   rawBody: string,
   headers: { get(name: string): string | null },
-  opts: { secretKey?: string; webhookSecret?: string; now?: number; toleranceSec?: number } = {},
+  opts: {
+    secretKey?: string;
+    webhookSecret?: string;
+    now?: number;
+    toleranceSec?: number;
+  } = {},
 ): boolean {
   const secretKey = opts.secretKey ?? env("PAYSTACK_SECRET_KEY");
   const webhookSecret = opts.webhookSecret ?? env("PAYSTACK_WEBHOOK_SECRET");
@@ -106,17 +125,23 @@ export function verifyWebhookSignature(
       }
     }
     if (!/^\d+$/.test(t) || Math.abs(now - Number(t)) > tolerance) return false;
-    const expected = createHmac("sha512", webhookSecret).update(`${t}.${rawBody}`).digest("hex");
+    const expected = createHmac("sha512", webhookSecret)
+      .update(`${t}.${rawBody}`)
+      .digest("hex");
     return sigs.some((s) => safeEqualHex(expected, s.toLowerCase()));
   }
   // Without the signing secret the new header can't be checked; fall back to the legacy header.
   const legacy = headers.get("x-paystack-signature");
   if (!legacy || !secretKey) return false;
-  const expected = createHmac("sha512", secretKey).update(rawBody).digest("hex");
+  const expected = createHmac("sha512", secretKey)
+    .update(rawBody)
+    .digest("hex");
   return safeEqualHex(expected, legacy.toLowerCase());
 }
 
-export function parseMetadata(m: PaystackTransaction["metadata"]): Record<string, unknown> {
+export function parseMetadata(
+  m: PaystackTransaction["metadata"],
+): Record<string, unknown> {
   if (!m) return {};
   if (typeof m === "string") {
     try {
@@ -129,7 +154,9 @@ export function parseMetadata(m: PaystackTransaction["metadata"]): Record<string
 }
 
 /** A charge is only accepted if it matches one of our prices exactly. */
-export function isExpectedCharge(tx: Pick<PaystackTransaction, "status" | "amount" | "currency">) {
+export function isExpectedCharge(
+  tx: Pick<PaystackTransaction, "status" | "amount" | "currency">,
+) {
   if (tx.status !== "success") return false;
   return allowedCurrencies().some((c) => {
     const p = priceFor(c);

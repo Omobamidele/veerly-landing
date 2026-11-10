@@ -2,6 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useCurrency } from "./Currency";
 import { useLaunch } from "./LaunchProvider";
 
 /** Primary call to action that follows the launch state. */
@@ -19,10 +20,11 @@ export default function LaunchCta({
   className?: string;
 }) {
   const { launched } = useLaunch();
+  const { price } = useCurrency();
   const text = launched
     ? short
       ? "Get access"
-      : "Get founding access, $7.99"
+      : `Get founding access, ${price}`
     : "Join the waitlist";
   return (
     <Button asChild variant={variant} size={size} className={className}>

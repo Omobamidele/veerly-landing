@@ -12,7 +12,14 @@ test("webhook: rejects bad signature, marks paid once (idempotent)", async () =>
   const { POST } = await import("../app/api/paystack/webhook/route");
 
   const { signup } = await upsertSignup(
-    validateStep1({ name: "Ada Obi", email: "ada@example.com", whatsapp: "08031234567", whatsappCountry: "NG", emailConsent: true, whatsappConsent: true }).data,
+    validateStep1({
+      name: "Ada Obi",
+      email: "ada@example.com",
+      whatsapp: "08031234567",
+      whatsappCountry: "NG",
+      emailConsent: true,
+      whatsappConsent: true,
+    }).data,
   );
 
   const payload = JSON.stringify({
@@ -27,9 +34,15 @@ test("webhook: rejects bad signature, marks paid once (idempotent)", async () =>
       metadata: { signupId: signup.id },
     },
   });
-  const sig = createHmac("sha512", "sk_test_mock").update(payload).digest("hex");
+  const sig = createHmac("sha512", "sk_test_mock")
+    .update(payload)
+    .digest("hex");
   const req = (s: string) =>
-    new Request("http://localhost/api/paystack/webhook", { method: "POST", body: payload, headers: { "x-paystack-signature": s } });
+    new Request("http://localhost/api/paystack/webhook", {
+      method: "POST",
+      body: payload,
+      headers: { "x-paystack-signature": s },
+    });
 
   assert.equal((await POST(req("0".repeat(128)))).status, 401);
   assert.equal((await POST(req(sig))).status, 200);
@@ -48,10 +61,24 @@ test("webhook: wrong amount is ignored", async () => {
   const { POST } = await import("../app/api/paystack/webhook/route");
   const payload = JSON.stringify({
     event: "charge.success",
-    data: { status: "success", reference: "cheap", amount: 100, currency: "NGN", customer: { email: "x@example.com" } },
+    data: {
+      status: "success",
+      reference: "cheap",
+      amount: 100,
+      currency: "NGN",
+      customer: { email: "x@example.com" },
+    },
   });
-  const sig = createHmac("sha512", "sk_test_mock").update(payload).digest("hex");
-  const res = await POST(new Request("http://localhost/x", { method: "POST", body: payload, headers: { "x-paystack-signature": sig } }));
+  const sig = createHmac("sha512", "sk_test_mock")
+    .update(payload)
+    .digest("hex");
+  const res = await POST(
+    new Request("http://localhost/x", {
+      method: "POST",
+      body: payload,
+      headers: { "x-paystack-signature": sig },
+    }),
+  );
   assert.equal(res.status, 200);
   let list: unknown[] = [];
   try {

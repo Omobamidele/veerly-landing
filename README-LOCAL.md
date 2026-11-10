@@ -25,7 +25,8 @@ Go to **http://localhost:3210** in your browser.
 It uses port 3210, so it won't clash with anything you already run on 3000.
 
 Handy links:
-- After-launch view (checkout instead of waitlist): http://localhost:3210/?preview=launched
+- From 1 Dec (countdown to Cohort 1, still waitlist only): http://localhost:3210/?preview=promo
+- From 1 Jan (enrolment and checkout open): http://localhost:3210/?preview=enrol (same as ?preview=launched)
 - Welcome page after payment: http://localhost:3210/welcome?preview=paid
 
 To stop it, click the terminal and press **Ctrl + C**. To start it again later, open a terminal in the folder and run `npm run dev`.

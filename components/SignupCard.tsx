@@ -32,6 +32,7 @@ import { consentText } from "@/lib/consent";
 import { careerPaths, careerStages } from "@/lib/options";
 import { countryOptions, toE164 } from "@/lib/phone";
 import { cn } from "@/lib/utils";
+import { CheckoutNote, CurrencySelect, useCurrency } from "./Currency";
 import { useLaunch } from "./LaunchProvider";
 
 type Errors = Record<string, string>;
@@ -71,7 +72,6 @@ function Alert({ msg }: { msg: string }) {
 
 export default function SignupCard(props: {
   paymentsEnabled: boolean;
-  currencies: ("NGN" | "USD")[];
   whatsappChannelUrl?: string;
 }) {
   const { launched } = useLaunch();
@@ -161,7 +161,7 @@ function WaitlistFlow({ whatsappChannelUrl }: { whatsappChannelUrl?: string }) {
       e.whatsapp = "Add your WhatsApp number so we can notify you there.";
     if (v.emailConsent !== "on" && !wantsWa)
       e.consent =
-        "Choose at least one way for us to tell you about the launch.";
+        "Choose at least one way for us to tell you when enrolment opens.";
     setErrors(e);
     if (Object.keys(e).length) {
       setMessage("");
@@ -285,7 +285,7 @@ function WaitlistFlow({ whatsappChannelUrl }: { whatsappChannelUrl?: string }) {
             <FieldLabel htmlFor="whatsapp">
               WhatsApp number{" "}
               <span className="font-normal text-ink-3">
-                for the launch alert
+                for the enrolment alert
               </span>
             </FieldLabel>
             <div className="flex gap-2">
@@ -405,7 +405,7 @@ function WaitlistFlow({ whatsappChannelUrl }: { whatsappChannelUrl?: string }) {
     <Button asChild variant="outline" size="lg" className="w-full">
       <a href="/api/calendar/launch.ics">
         <CalendarPlus data-icon="inline-start" />
-        Add the launch to your calendar
+        Add enrolment opening to your calendar
       </a>
     </Button>
   );
@@ -561,20 +561,33 @@ function WaitlistFlow({ whatsappChannelUrl }: { whatsappChannelUrl?: string }) {
 }
 
 /* ---------------- Checkout (launched) ---------------- */
+function CurrencyField() {
+  return (
+    <Field>
+      <FieldLabel htmlFor="co-currency">Currency</FieldLabel>
+      <div className="flex flex-col gap-2">
+        <CurrencySelect
+          id="co-currency"
+          detailed
+          className="h-11 w-full px-3 text-sm md:text-sm"
+        />
+        <CheckoutNote className="text-ink-3" />
+      </div>
+    </Field>
+  );
+}
+
 function CheckoutPanel({
   paymentsEnabled,
-  currencies,
   onWaitlist,
 }: {
   paymentsEnabled: boolean;
-  currencies: ("NGN" | "USD")[];
   onWaitlist: () => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [message, setMessage] = useState("");
-  const [currency, setCurrency] = useState<"NGN" | "USD">("NGN");
-  const amountLabel = currency === "USD" ? "$7.99" : "₦10,000";
+  const { currency, price, chargePrice } = useCurrency();
 
   async function submit(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
@@ -616,7 +629,7 @@ function CheckoutPanel({
     >
       <CardHead
         title="Get founding access"
-        sub="$7.99 (≈ ₦10,000), one-time. Everything included."
+        sub={`${price}, one-time. Everything included.`}
       />
       {paymentsEnabled ? (
         <>
@@ -640,36 +653,7 @@ function CheckoutPanel({
                 <FieldError id="co-email-error">{errors.email}</FieldError>
               ) : null}
             </Field>
-            {currencies.length > 1 && (
-              <FieldSet className="gap-2">
-                <FieldLegend variant="label" className="mb-0">
-                  Currency
-                </FieldLegend>
-                <div className="grid grid-cols-2 gap-2">
-                  {currencies.map((c) => (
-                    <label
-                      key={c}
-                      className={cn(
-                        "flex h-11 cursor-pointer items-center justify-center rounded-lg border text-sm font-medium transition-colors has-[:focus-visible]:ring-3 has-[:focus-visible]:ring-ring/50",
-                        currency === c
-                          ? "border-brand bg-tint text-ink"
-                          : "border-input bg-white text-ink-2 hover:border-[#c5ced5]",
-                      )}
-                    >
-                      <input
-                        type="radio"
-                        name="currency-choice"
-                        value={c}
-                        checked={currency === c}
-                        onChange={() => setCurrency(c)}
-                        className="sr-only"
-                      />
-                      {c === "NGN" ? "Pay in naira" : "Pay in USD"}
-                    </label>
-                  ))}
-                </div>
-              </FieldSet>
-            )}
+            <CurrencyField />
           </FieldGroup>
           <div className="flex flex-col gap-3">
             <Button type="submit" size="lg" disabled={busy} className="w-full">
@@ -680,7 +664,7 @@ function CheckoutPanel({
               )}
               {busy
                 ? "Opening secure checkout…"
-                : `Pay ${amountLabel} securely`}
+                : `Pay ${chargePrice} securely`}
             </Button>
             <FieldDescription className="text-center text-[13px]">
               Secure checkout by Paystack. You&rsquo;ll come back here to start
@@ -690,6 +674,7 @@ function CheckoutPanel({
         </>
       ) : (
         <div className="flex flex-col gap-3">
+          <CurrencyField />
           <Button
             type="button"
             size="lg"
@@ -697,7 +682,7 @@ function CheckoutPanel({
             className="w-full"
             aria-describedby="closed-note"
           >
-            <Lock data-icon="inline-start" /> Payments open at launch
+            <Lock data-icon="inline-start" /> Checkout opening shortly
           </Button>
           <p className="text-center text-[13px] text-ink-3" id="closed-note">
             Checkout isn&rsquo;t switched on yet. Join the list and we&rsquo;ll

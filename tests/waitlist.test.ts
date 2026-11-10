@@ -14,23 +14,49 @@ test("phone numbers normalise to E.164", () => {
 test("step 1 validation: consent rules", async () => {
   const { validateStep1 } = await import("../lib/waitlist");
   assert.ok(validateStep1({ name: "A B", email: "a@b.co" }).errors.consent);
-  assert.ok(validateStep1({ name: "A B", email: "a@b.co", whatsappConsent: true }).errors.whatsapp);
-  assert.deepEqual(validateStep1({ name: "A B", email: "a@b.co", emailConsent: true }).errors, {});
+  assert.ok(
+    validateStep1({ name: "A B", email: "a@b.co", whatsappConsent: true })
+      .errors.whatsapp,
+  );
+  assert.deepEqual(
+    validateStep1({ name: "A B", email: "a@b.co", emailConsent: true }).errors,
+    {},
+  );
 });
 
 test("signup → profile update → duplicate email only adds information", async () => {
   const file = freshStore();
-  const { upsertSignup, updateProfile, validateStep1 } = await import("../lib/waitlist");
-  const first = await upsertSignup(validateStep1({ name: "Ngozi A", email: "NGOZI@example.com", emailConsent: true }).data);
+  const { upsertSignup, updateProfile, validateStep1 } =
+    await import("../lib/waitlist");
+  const first = await upsertSignup(
+    validateStep1({
+      name: "Ngozi A",
+      email: "NGOZI@example.com",
+      emailConsent: true,
+    }).data,
+  );
   assert.equal(first.duplicate, false);
   assert.equal(first.signup.consent.whatsapp.granted, false);
 
-  assert.equal(await updateProfile(first.signup.id, "wrong-token", { careerPath: "Data and Analytics" }), null);
-  const updated = await updateProfile(first.signup.id, first.signup.editToken, { careerPath: "Data and Analytics" });
+  assert.equal(
+    await updateProfile(first.signup.id, "wrong-token", {
+      careerPath: "Data and Analytics",
+    }),
+    null,
+  );
+  const updated = await updateProfile(first.signup.id, first.signup.editToken, {
+    careerPath: "Data and Analytics",
+  });
   assert.equal(updated?.profile.careerPath, "Data and Analytics");
 
   const again = await upsertSignup(
-    validateStep1({ name: "Someone Else", email: "ngozi@example.com", whatsapp: "08031234567", whatsappCountry: "NG", whatsappConsent: true }).data,
+    validateStep1({
+      name: "Someone Else",
+      email: "ngozi@example.com",
+      whatsapp: "08031234567",
+      whatsappCountry: "NG",
+      whatsappConsent: true,
+    }).data,
   );
   assert.equal(again.duplicate, true);
   assert.equal(again.signup.name, "Ngozi A"); // not overwritten
@@ -42,7 +68,13 @@ test("signup → profile update → duplicate email only adds information", asyn
 });
 
 test("ics has the launch time in UTC", () => {
-  const ics = buildIcs({ uid: "x", title: "Launch", description: "d", start: new Date("2026-12-01T09:00:00+01:00"), minutes: 30 });
+  const ics = buildIcs({
+    uid: "x",
+    title: "Launch",
+    description: "d",
+    start: new Date("2026-12-01T09:00:00+01:00"),
+    minutes: 30,
+  });
   assert.match(ics, /DTSTART:20261201T080000Z/);
   assert.match(ics, /DTEND:20261201T083000Z/);
 });

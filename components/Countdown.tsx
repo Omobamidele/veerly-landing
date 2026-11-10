@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Price } from "./Currency";
 import { cn } from "@/lib/utils";
 import { useLaunch } from "./LaunchProvider";
 
@@ -15,86 +16,100 @@ function parts(ms: number) {
 }
 const two = (n: number) => String(n).padStart(2, "0");
 
+const dayLabel = (ms: number) =>
+  new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Africa/Lagos",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(ms);
+const dateLabel = (ms: number) => {
+  const time = new Intl.DateTimeFormat("en-US", {
+    timeZone: "Africa/Lagos",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(ms);
+  return `${dayLabel(ms)}, ${time} WAT`;
+};
+
 /** Screen readers hear an update once a minute, not every second. */
 function useSpoken() {
-  const { launchAtMs, now, launched } = useLaunch();
-  const p = now === null ? null : parts(launchAtMs - now);
-  const minuteKey = p ? `${p.days}-${p.hours}-${p.minutes}` : "";
+  const { now, target } = useLaunch();
+  const p = now === null || !target ? null : parts(target.atMs - now);
+  const minuteKey =
+    p && target ? `${target.atMs}-${p.days}-${p.hours}-${p.minutes}` : "";
   const [spoken, setSpoken] = useState("");
   useEffect(() => {
-    if (!p) return;
+    if (!p || !target) return;
     setSpoken(
-      launched
-        ? "Founding enrolment is open."
-        : `Launching in ${p.days} days, ${p.hours} hours and ${p.minutes} minutes.`,
+      `${target.name ?? "The next cohort"} starts in ${p.days} days, ${p.hours} hours and ${p.minutes} minutes.`,
     );
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [minuteKey, launched]);
+  }, [minuteKey]);
   return spoken;
 }
 
 /**
- * The signature moment: Mo's yellow countdown.
- * variant "board" = the hero board on the brand stage; "strip" = the compact version in the pricing band.
+ * The countdown slot. Before launch (Mo's rule) there is NO timer: a calm, static "Enrolment opens …" panel.
+ * From launch onward: Mo's yellow tiles on navy, counting to the next cohort (lib/cohorts.ts), never zero.
+ * variant "board" = the hero panel; "strip" = the compact version in the pricing band.
  */
 export default function Countdown({
   variant = "board",
   className,
-  note,
+  cohortDay,
+  withHeading = false,
 }: {
   variant?: "board" | "strip";
   className?: string;
-  note?: string;
+  /** Pre-launch board only, e.g. "Cohort 1 starts 1 February 2027". */
+  cohortDay?: string;
+  /** Strip only: show "Cohort 1 starts …" above the tiles. */
+  withHeading?: boolean;
 }) {
-  const { launchAtMs, now, launched, label } = useLaunch();
+  const { now, target, enrolAtMs, phase } = useLaunch();
   const spoken = useSpoken();
-  const p = now === null ? null : parts(launchAtMs - now);
   const board = variant === "board";
 
-  if (launched) {
-    return (
+  if (!target) {
+    const opens = dateLabel(enrolAtMs);
+    return board ? (
       <div
-        className={cn(
-          "flex flex-col gap-3",
-          board && "countdown-panel",
-          className,
-        )}
+        className={cn("countdown-panel flex flex-col gap-5", className)}
         data-countdown
+        data-target="none"
       >
-        <div
-          data-tile
-          className={cn(
-            "flex items-end justify-between gap-4 rounded-xl bg-yellow text-ink shadow-[0_1px_0_rgb(255_255_255/0.45)_inset,0_-2px_0_rgb(0_43_66/0.18)_inset,0_12px_24px_-12px_rgb(0_0_0/0.6)]",
-            board ? "px-6 py-6 sm:px-7 sm:py-7" : "px-5 py-4",
-          )}
-        >
-          <div className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-ink/70">
-              Founding cohort
-            </span>
-            <span
-              className={cn(
-                "display !leading-[1.02]",
-                board ? "text-[clamp(28px,2.6vw,38px)]" : "text-2xl",
-              )}
-            >
-              Enrolment is open
-            </span>
-          </div>
-          <span className="display tnum text-xl leading-none">$7.99</span>
-        </div>
-        {board ? (
-          <p className="text-sm text-white/85">
-            Opened {label}. One-time payment, about ₦10,000.
+        <div className="flex flex-col gap-2">
+          <p className="text-sm font-medium text-white/85">
+            Founding enrolment
           </p>
-        ) : null}
-        <span className="sr-only" aria-live="polite">
-          {spoken}
-        </span>
+          <p className="display text-[clamp(30px,3vw,42px)] !leading-[1.05] text-white">
+            Opens {dayLabel(enrolAtMs)}
+          </p>
+        </div>
+        <p className="max-w-[42ch] text-[15px] leading-relaxed text-white/85">
+          Join the waitlist and we&rsquo;ll message you on WhatsApp when it
+          opens. Nothing to pay until then.
+        </p>
+        <p className="border-t border-white/15 pt-4 text-sm text-white/85">
+          <span className="text-white">{opens}</span>
+          {cohortDay ? ` · ${cohortDay}` : ""}
+        </p>
       </div>
+    ) : (
+      <p
+        className={cn("text-sm leading-relaxed text-white/70", className)}
+        data-countdown
+        data-target="none"
+      >
+        Founding enrolment opens <span className="text-white">{opens}</span>.
+        Nothing to pay until then.
+      </p>
     );
   }
 
+  const p = now === null ? null : parts(target.atMs - now);
+  const when = dateLabel(target.atMs);
   const cells: [string, string][] = [
     [p ? two(p.days) : "--", "Days"],
     [p ? two(p.hours) : "--", "Hours"],
@@ -110,10 +125,20 @@ export default function Countdown({
         className,
       )}
       data-countdown
+      data-target={target.kind}
     >
       {board ? (
-        <p className="text-sm font-medium text-white">
-          Founding enrolment opens in
+        <p className="flex items-baseline justify-between gap-3 text-sm font-medium text-white">
+          <span>{target.label}</span>
+          {target.name ? (
+            <span className="text-white/85" data-cohort-name>
+              {target.name}
+            </span>
+          ) : null}
+        </p>
+      ) : withHeading ? (
+        <p className="text-sm text-white/60">
+          {`${target.name ?? "Next cohort"} starts`} {when}
         </p>
       ) : null}
       <div
@@ -152,12 +177,23 @@ export default function Countdown({
       </div>
       {board ? (
         <p className="border-t border-white/15 pt-4 text-sm text-white/85">
-          <span className="text-white">{label}</span>
-          {note ? ` · ${note}` : ""}
+          <span className="text-white">{when}</span>
+          {phase === "enrol" ? (
+            <>
+              {" · enrolment open, "}
+              <Price className="text-white" /> one-time
+            </>
+          ) : (
+            ` · Enrolment opens ${dayLabel(enrolAtMs)}`
+          )}
+        </p>
+      ) : phase === "promo" ? (
+        <p className="text-[13px] text-white/60">
+          Enrolment opens {dayLabel(enrolAtMs)}. Nothing to pay until then.
         </p>
       ) : null}
       <span className="sr-only" aria-live="polite">
-        {spoken || `Launching ${label}.`}
+        {spoken || `Next cohort starts ${when}.`}
       </span>
     </div>
   );

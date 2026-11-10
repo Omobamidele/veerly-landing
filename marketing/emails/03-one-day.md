@@ -3,13 +3,13 @@
 
 Hi {{ contact.FIRSTNAME }},
 
-Quick reminder: Veerly founding enrolment opens **tomorrow, 1 December, at 9:00 AM WAT**.
+Quick reminder: Veerly founding enrolment opens **tomorrow, 1 January, at 9:00 AM WAT**.
 
 When doors open you'll:
 
-1. Pay $7.99 (about ₦10,000) through Paystack's secure checkout.
+1. Pay ₦10,000 (about $7.99) through Paystack's secure checkout.
 2. Take your short career assessment.
-3. Get your personalized plan and your three Notion systems.
+3. Get your personalized plan and your three Notion systems, ready for Cohort 1 on 1 February 2027.
 
 We'll send the link the moment enrolment opens. [Add it to your calendar]([site-url]/api/calendar/launch.ics) so you don't miss it.
 

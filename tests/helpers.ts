@@ -7,7 +7,14 @@ import { setStore } from "../lib/store";
 export function freshStore() {
   const dir = mkdtempSync(path.join(tmpdir(), "veerly-test-"));
   process.env.WAITLIST_FILE = path.join(dir, "waitlist.json");
-  for (const k of ["BREVO_API_KEY", "NOTION_TOKEN", "WAITLIST_WEBHOOK_URL", "UPSTASH_REDIS_REST_URL", "VERCEL"]) delete process.env[k];
+  for (const k of [
+    "BREVO_API_KEY",
+    "NOTION_TOKEN",
+    "WAITLIST_WEBHOOK_URL",
+    "UPSTASH_REDIS_REST_URL",
+    "VERCEL",
+  ])
+    delete process.env[k];
   setStore(null);
   return process.env.WAITLIST_FILE;
 }

@@ -1,7 +1,7 @@
 """Preview screenshots + a real UI signup test.
 Usage: python3 scripts/screenshots.py [base_url] [--submit] [--switch] [--prefix v4]
 --submit fills the real form (Name, Email, WhatsApp +234, both consents), completes step 2 and captures the success state.
---switch fakes the clock to 3 s before launch and checks the page flips to "Get founding access".
+--switch fakes the clock to 3 s before enrolment opens (1 Jan 2027) and checks the page flips to "Get founding access".
 """
 import sys
 from playwright.sync_api import sync_playwright
@@ -69,7 +69,7 @@ if "--switch" in sys.argv:
         b = p.chromium.launch(executable_path=CHROME)
         ctx = b.new_context(viewport={"width": 1440, "height": 900})
         pg = ctx.new_page()
-        launch = datetime(2026, 12, 1, 8, 0, 0, tzinfo=timezone.utc)
+        launch = datetime(2027, 1, 1, 8, 0, 0, tzinfo=timezone.utc)  # enrolment opens (lib/launch.ts)
         pg.clock.install(time=launch - timedelta(seconds=3))
         pg.goto(base, wait_until="networkidle")
         before = pg.locator("#join-card [data-card-title]").inner_text()
