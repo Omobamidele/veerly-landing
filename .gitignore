@@ -1,0 +1,11 @@
+node_modules
+.next
+out
+.env*
+!.env.example
+data/*.json
+*.log
+.vercel
+next-env.d.ts
+data/*.jsonl
+data/*.csv

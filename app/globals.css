@@ -1,0 +1,431 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ───────── Veerly v3 tokens (see DESIGN.md) ───────── */
+@theme inline {
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: var(--font-bricolage), var(--font-geist), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-display);
+
+  /* Brand blue: Lemon Squeezy --blue-700 scale (see DESIGN.md → Colour). */
+  --color-stage: var(--stage);
+  --color-stage-deep: var(--stage-deep);
+  --color-brand: var(--brand);
+  --color-brand-press: var(--brand-press);
+  --color-tint: var(--tint);
+  --color-tint-line: var(--tint-line);
+  --color-navy: var(--navy);
+  --color-yellow: #ffd84d;
+  --color-ink: #0d1b26;
+  --color-ink-2: #44525e;
+  --color-ink-3: #5f6c77;
+  --color-ground: #f8fafb;
+  --color-line: #e3e8ec;
+  --color-proof: #08714f;
+
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+:root {
+  /* Lemon Squeezy's true-blue scale (Mo picked option 2). */
+  --stage: #0075ad; /* LS --blue-700 */
+  --stage-deep: #002b42; /* derived navy, same 200° hue as --blue-700 */
+  --navy: #002b42; /* countdown panel: lifts #FFD84D to 10.7:1 */
+  --brand: #0075ad; /* LS --blue-700 (white text 5.1:1) */
+  --brand-press: #00608e; /* derived from --blue-700 */
+  --tint: #f0faff; /* LS --blue-50-501 */
+  --tint-line: #dbf3ff; /* LS --blue-100 */
+  --background: #f8fafb;
+  --foreground: #0d1b26;
+  --card: #ffffff;
+  --card-foreground: #0d1b26;
+  --popover: #ffffff;
+  --popover-foreground: #0d1b26;
+  --primary: var(--brand);
+  --primary-foreground: #ffffff;
+  --secondary: var(--tint);
+  --secondary-foreground: #0d1b26;
+  --muted: #f1f4f6;
+  --muted-foreground: #56636e;
+  --accent: var(--tint);
+  --accent-foreground: #0d1b26;
+  --destructive: #b3261e;
+  --border: #e3e8ec;
+  --input: #d3dbe1;
+  --ring: var(--brand);
+  --radius: 8px;
+}
+
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+    scroll-padding-top: 88px;
+    text-rendering: optimizeLegibility;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    html {
+      scroll-behavior: smooth;
+    }
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-size: 16px;
+    line-height: 1.6;
+    font-feature-settings: "ss01", "cv11";
+    caret-color: var(--color-brand);
+  }
+  ::selection {
+    background: var(--color-ink);
+    color: #fff;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  a {
+    text-underline-offset: 3px;
+    text-decoration-thickness: 1px;
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-brand);
+    outline-offset: 2px;
+  }
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+  p {
+    text-wrap: pretty;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #ccd5dc transparent;
+  }
+}
+
+@layer components {
+  .wrap {
+    width: 100%;
+    max-width: 1264px;
+    margin-inline: auto;
+    padding-inline: 20px;
+  }
+  @media (min-width: 768px) {
+    .wrap {
+      padding-inline: 32px;
+    }
+  }
+  .display {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 96;
+    font-weight: 700;
+    letter-spacing: -0.035em;
+  }
+  .h2 {
+    font-family: var(--font-display);
+    font-variation-settings: "opsz" 72;
+    font-weight: 700;
+    font-size: clamp(32px, 3.8vw, 52px);
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    color: var(--color-ink);
+  }
+  .h2 .quiet {
+    color: color-mix(in oklab, var(--color-ink) 50%, var(--color-ground));
+  }
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  .skip {
+    position: absolute;
+    left: 12px;
+    top: -60px;
+    z-index: 100;
+    background: var(--color-ink);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 8px;
+  }
+  .skip:focus {
+    top: 12px;
+  }
+
+  /* Countdown tile flap line */
+  .flap {
+    position: relative;
+  }
+  .flap::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    top: 50%;
+    height: 1px;
+    background: rgb(13 27 38 / 0.14);
+  }
+  .tick {
+    display: inline-block;
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .tick {
+      animation: tick 220ms var(--ease-out-expo);
+    }
+  }
+  @keyframes tick {
+    from {
+      transform: translateY(-28%);
+      opacity: 0.2;
+    }
+  }
+
+  /* ───────── Legacy pages: /welcome, /privacy, /terms, /admin ───────── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    padding-inline: 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    border: 1px solid transparent;
+    transition: background-color 150ms, border-color 150ms;
+  }
+  .btn-primary {
+    background: var(--color-brand);
+    color: #fff;
+  }
+  .btn-primary:hover {
+    background: var(--color-brand-press);
+    color: #fff;
+  }
+  .btn-secondary {
+    background: #fff;
+    color: var(--color-ink);
+    border-color: var(--color-input);
+  }
+  .btn-secondary:hover {
+    border-color: var(--color-ink-3);
+  }
+  .page {
+    padding-block: 72px 112px;
+  }
+  .muted {
+    color: var(--color-ink-3);
+  }
+  .welcome,
+  .prose {
+    max-width: 720px;
+  }
+  .welcome h1,
+  .prose h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    font-size: clamp(36px, 5vw, 56px);
+    line-height: 1.02;
+    margin-bottom: 16px;
+  }
+  .lede {
+    font-size: 19px;
+    line-height: 1.5;
+    color: var(--color-ink-2);
+  }
+  .lede a,
+  .prose a {
+    color: var(--color-brand);
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--color-ink-2);
+    margin-bottom: 20px;
+  }
+  .status-pill.ok {
+    color: var(--color-proof);
+  }
+  .next-steps {
+    list-style: none;
+    padding: 0;
+    margin: 40px 0 0;
+    border-top: 1px solid var(--color-line);
+  }
+  .next-steps > li {
+    display: grid;
+    grid-template-columns: 40px 1fr;
+    gap: 16px;
+    padding-block: 28px;
+    border-bottom: 1px solid var(--color-line);
+  }
+  .next-steps .num {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 20px;
+    color: var(--color-brand);
+    font-variant-numeric: tabular-nums;
+  }
+  .next-steps h3 {
+    font-weight: 600;
+    font-size: 18px;
+    margin-bottom: 4px;
+  }
+  .next-steps p {
+    color: var(--color-ink-2);
+    margin-bottom: 12px;
+  }
+  .prose h2 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    font-size: 22px;
+    margin: 40px 0 10px;
+  }
+  .prose p,
+  .prose li {
+    color: var(--color-ink-2);
+  }
+  .prose ul {
+    list-style: disc;
+    padding-left: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .draft-note {
+    font-size: 14px;
+    color: var(--color-ink-2);
+    border: 1px solid var(--color-line);
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+  }
+  .admin {
+    padding-block: 48px;
+  }
+  .admin-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 24px;
+  }
+  .admin-head h1 {
+    font-family: var(--font-display);
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+  .admin-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    background: #fff;
+    margin-bottom: 24px;
+  }
+  .admin-stats > div {
+    padding: 16px 20px;
+    border-right: 1px solid var(--color-line);
+  }
+  .admin-stats > div:last-child {
+    border-right: 0;
+  }
+  .admin-stats dt {
+    font-size: 13px;
+    color: var(--color-ink-3);
+  }
+  .admin-stats dd {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  .admin-table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--color-line);
+    border-radius: 12px;
+    background: #fff;
+  }
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .admin-table th,
+  .admin-table td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-line);
+    white-space: nowrap;
+  }
+  .admin-table th {
+    font-weight: 500;
+    color: var(--color-ink-3);
+    background: #fafcfd;
+  }
+}
+
+/* Entrance hold (released by GSAP, or by this fallback after 2.5s if scripts fail). */
+html[data-motion="on"] [data-enter],
+html[data-motion="on"] [data-tile] {
+  visibility: hidden;
+  animation: enter-fallback 0s linear 2.5s forwards;
+}
+@keyframes enter-fallback {
+  to {
+    visibility: visible;
+  }
+}
+
+/* The navy base under the hero countdown: makes the yellow tiles read as one deliberate object on the sky-blue stage. */
+.countdown-panel {
+  background: var(--navy);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  box-shadow:
+    inset 0 0 0 1px rgb(255 255 255 / 0.08),
+    0 24px 48px -24px rgb(0 20 32 / 0.55);
+}
+@media (min-width: 640px) {
+  .countdown-panel {
+    padding: 1.5rem;
+  }
+}
