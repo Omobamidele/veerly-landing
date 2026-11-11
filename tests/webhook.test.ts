@@ -20,6 +20,7 @@ test("webhook: rejects bad signature, marks paid once (idempotent)", async () =>
       emailConsent: true,
       whatsappConsent: true,
       level: "beginner",
+      careerPath: "Administration and Virtual Assistance",
     }).data,
   );
 
@@ -32,7 +33,7 @@ test("webhook: rejects bad signature, marks paid once (idempotent)", async () =>
       currency: "NGN",
       paid_at: "2026-12-01T09:05:00.000Z",
       customer: { email: "ada@example.com" },
-      metadata: { signupId: signup.id, level: "advanced" },
+      metadata: { signupId: signup.id, level: "advanced", careerPath: "Data and Analytics" },
     },
   });
   const sig = createHmac("sha512", "sk_test_mock")
@@ -55,6 +56,7 @@ test("webhook: rejects bad signature, marks paid once (idempotent)", async () =>
   assert.equal(saved[0].payment.reference, "vrly-test-1");
   assert.deepEqual(saved[0].payment.references, ["vrly-test-1"]);
   assert.equal(saved[0].profile.level, "advanced");
+  assert.equal(saved[0].profile.careerPath, "Data and Analytics");
 });
 
 test("webhook: wrong amount is ignored", async () => {

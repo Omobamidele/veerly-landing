@@ -23,7 +23,7 @@
   --color-ink-2: #44525e;
   --color-ink-3: #5f6c77;
   --color-ground: #f8fafb;
-  --color-line: #e3e8ec;
+  --color-line: #cfd8de;
   --color-proof: #08714f;
 
   --color-ring: var(--ring);
@@ -152,13 +152,13 @@
   .display {
     font-family: var(--font-display);
     font-variation-settings: "opsz" 96;
-    font-weight: 700;
-    letter-spacing: -0.035em;
+    font-weight: 800;
+    letter-spacing: -0.04em;
   }
   .h2 {
     font-family: var(--font-display);
     font-variation-settings: "opsz" 72;
-    font-weight: 700;
+    font-weight: 800;
     font-size: clamp(32px, 3.8vw, 52px);
     line-height: 1.04;
     letter-spacing: -0.03em;
@@ -255,7 +255,7 @@
   .welcome h1,
   .prose h1 {
     font-family: var(--font-display);
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: -0.03em;
     font-size: clamp(36px, 5vw, 56px);
     line-height: 1.02;
@@ -321,6 +321,7 @@
   .prose p,
   .prose li {
     color: var(--color-ink-2);
+    max-width: 52ch;
   }
   .prose ul {
     list-style: disc;
@@ -337,6 +338,7 @@
     border-radius: 8px;
     padding: 10px 14px;
     margin-bottom: 8px;
+    max-width: 54ch;
   }
   .admin {
     padding-block: 48px;

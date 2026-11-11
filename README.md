@@ -4,7 +4,7 @@ Next.js 15 (App Router) + TypeScript. A calm, single-page site with a launch cou
 (email and WhatsApp opt-in), Paystack checkout, a post-payment welcome page, Brevo email sync, a WhatsApp
 launch-notification script, and a small admin view. **Nothing is sent or charged until you add your own keys.**
 
-**Design (v5–v8.1):** "Blue stage, yellow signal" (Lemon Squeezy true blue #0075AD, navy countdown panel). v7 adds real screenshots of the Virtual Assistant Career OS. v8 adds a Virtual Assistant level picker (Beginner, Intermediate, Advanced) before waitlist or checkout. v8.1 puts the yellow countdown tiles on the hero from today, counting to enrolment on 1 January 2027 — see `DESIGN.md` for the spec, references and tokens. Built with Tailwind CSS v4,
+**Design (v5–v9):** "Blue stage, yellow signal" (Lemon Squeezy true blue #0075AD, navy countdown panel). v7 adds real screenshots of the Virtual Assistant Career OS. v8 adds a Virtual Assistant level picker (Beginner, Intermediate, Advanced) before waitlist or checkout. v8.1 puts the yellow countdown tiles on the hero from today, counting to enrolment on 1 January 2027. v9 gives every career path its own Beginner, Intermediate and Advanced plan, a bolder wordmark and yellow, and a currency detector that works on Netlify and Vercel — see `DESIGN.md` for the spec, references and tokens. Built with Tailwind CSS v4,
 shadcn/ui (Radix) components in `components/ui/`, and restrained GSAP + ScrollTrigger motion (`components/Motion.tsx`, off for
 `prefers-reduced-motion`). Fonts: Bricolage Grotesque (display) and Geist (body). Previous designs: git tags `v1`, `v2`
 (v1 also in `_v1-archive/`).
@@ -37,7 +37,7 @@ consent rules, VA levels, phone normalisation, Brevo sync with mocked fetch, che
   announces to screen readers once a minute.
 - **At zero,** the page switches by itself: the hero card becomes "Get founding access", the pricing button goes to checkout,
   and the waitlist copy changes. `/api/checkout` also checks the launch time on the server.
-- **Level choice:** before joining the waitlist or paying, visitors choose a Virtual Assistant level (Beginner, Intermediate or Advanced). Each level has its own workspace; they only receive the one they choose. The price is the same at every level. The choice is saved on the signup, passed in Paystack metadata, and shown in the checkout summary and on the welcome page.
+- **Path and level:** before joining the waitlist or paying, visitors choose a career path and a level (Beginner, Intermediate or Advanced). Every path has all three levels. Each combination has its own workspace; they only receive the one they choose. The price is the same at every path and level. The choice is saved on the signup, passed in Paystack metadata, and shown in the checkout summary and on the welcome page.
 - **Waitlist step 1:** name, email and WhatsApp number (country picker defaults to Nigeria +234, all countries supported, stored as E.164).
   There are two separate, unticked consent boxes:
   - email updates and marketing;
@@ -116,7 +116,7 @@ That rises to 2,000 after verification or a scaling path, then 10,000 and 100,00
 
 ## Prices, currencies and the countdown
 
-- **Prices:** edit `lib/pricing.ts`. It holds one hand-set table for NGN, USD, GBP, EUR, CAD, GHS, KES, ZAR, INR and AUD. There is no live FX. Visitors can pick a currency, and the choice is remembered in their browser.
+- **Prices:** edit `lib/pricing.ts`. It holds one hand-set table for NGN, USD, GBP, EUR, CAD, GHS, KES, ZAR, INR and AUD. There is no live FX. Nigeria is ₦10,000 by default; other countries are $7.99 unless we have a local display price. The default is detected from CDN geo headers (`lib/geo.ts`: Vercel, Netlify, Cloudflare and others), then Africa/Lagos (and other known zones), then a language-tag region. Visitors can pick a currency, and the choice is remembered in their browser. `/api/geo` repeats the header lookup for the client when the server did not receive a country.
 - **Checkout currency:** NGN when NGN is picked. Any other currency charges USD only if `PAYSTACK_ENABLE_USD=true`, otherwise NGN. The site shows a short note whenever the shown currency isn't the charged one.
 - **Dates:** edit `lib/launch.ts`, the one timeline config. The countdown logic is in `lib/cohorts.ts`. Until enrolment opens on 1 January 2027 the yellow tiles count down to that date. From then on they count to the next cohort. If the list runs out, they count to the first Monday of next month at 9:00 WAT, so they never stop.
 
@@ -146,7 +146,7 @@ account; international cards cost 3.9%. The code is open to adding Stripe or Lem
 Set `ADMIN_PASSWORD`, then open `/admin/waitlist` (basic auth, any username). It shows counts and a table and has an
 **Export CSV** button. Without the password the route returns 404. There's also a command-line export: `npm run export:csv`.
 
-## Deploy later (Vercel)
+## Deploy later (Vercel or Netlify)
 
 1. Import the repo.
 2. Set `NEXT_PUBLIC_SITE_URL`, `WAITLIST_STORE=upstash` with the Upstash keys, and Brevo and Paystack keys as needed.
@@ -172,4 +172,4 @@ Set `ADMIN_PASSWORD`, then open `/admin/waitlist` (basic auth, any username). It
 
 ## v7 — Inside your Veerly workspace
 
-Real cropped screenshots of the Virtual Assistant Career OS (the first finished path; the other nine follow the same system) appear after the career-paths grid, in the same calm figure frames as the rest of the page. Assets live in `public/product/` as optimized WebP. `learning-path` and `home-schedule` shots were not used. Screenshots of the new section: `python3 scripts/screenshots.py http://localhost:3210 --prefix v7` and then capture `#workspace` into `screenshots/v7-desktop.png` and `screenshots/v7-mobile.png`.
+v9.3: a "See inside your workspace" section (`components/Workspace.tsx`, right after the three systems) shows real, cropped screenshots of the live Veerly Notion pages (VA Beginner home, cohort clock, four-week plan, a portfolio project, trackers, VA Library) in a tabbed app-window frame. Assets live in `public/notion/` as AVIF + WebP at 800/1200/full width. Each path and level has its own workspace; the section says so. Screenshots: `python3 scripts/screenshots-v93.py http://localhost:3210` writes `screenshots/v9.3-workspace-desktop.png` and `-mobile.png`.

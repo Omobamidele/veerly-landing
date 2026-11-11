@@ -1,0 +1,5 @@
+# Veerly landing — Netlify notes
+# Netlify sends the visitor country as `x-country` (and sometimes
+# `x-nf-country-code`). lib/geo.ts reads those, plus Vercel
+# (`x-vercel-ip-country`) and Cloudflare (`cf-ipcountry`) headers, so the
+# currency picker works on either host. The IP itself is never stored.

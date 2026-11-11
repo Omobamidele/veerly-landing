@@ -28,6 +28,7 @@ test("step 1 validation: consent rules", async () => {
       email: "a@b.co",
       emailConsent: true,
       level: "beginner",
+      careerPath: "Administration and Virtual Assistance",
     }).errors,
     {},
   );
@@ -38,6 +39,14 @@ test("step 1 validation: consent rules", async () => {
       emailConsent: true,
       level: "expert",
     }).errors.level,
+  );
+  assert.ok(
+    validateStep1({
+      name: "A B",
+      email: "a@b.co",
+      emailConsent: true,
+      level: "beginner",
+    }).errors.careerPath,
   );
 });
 
@@ -51,6 +60,7 @@ test("signup → profile update → duplicate email only adds information", asyn
       email: "NGOZI@example.com",
       emailConsent: true,
       level: "beginner",
+      careerPath: "Administration and Virtual Assistance",
     }).data,
   );
   assert.equal(first.duplicate, false);
@@ -75,6 +85,7 @@ test("signup → profile update → duplicate email only adds information", asyn
       whatsappCountry: "NG",
       whatsappConsent: true,
       level: "intermediate",
+      careerPath: "Data and Analytics",
     }).data,
   );
   assert.equal(again.duplicate, true);
@@ -82,7 +93,9 @@ test("signup → profile update → duplicate email only adds information", asyn
   assert.equal(again.signup.consent.email.granted, true); // not downgraded
   assert.equal(again.signup.consent.whatsapp.granted, true); // added
   assert.equal(first.signup.profile.level, "beginner");
+  assert.equal(first.signup.profile.careerPath, "Administration and Virtual Assistance");
   assert.equal(again.signup.profile.level, "intermediate"); // preference updated
+  assert.equal(again.signup.profile.careerPath, "Data and Analytics");
   const saved = JSON.parse(readFileSync(file, "utf8"));
   assert.equal(saved.length, 1);
   assert.equal(saved[0].consent.whatsapp.textVersion.length > 0, true);

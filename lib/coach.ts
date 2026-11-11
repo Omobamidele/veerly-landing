@@ -128,7 +128,7 @@ const FOUNDING_WEEKS: WeekFocus[] = [
 const SETUP: WeekFocus = {
   title: "Before day one",
   focus:
-    "Open your Notion systems, skim the expectations and block time for the weekly live session.",
+    "Open your Notion workspace, skim the expectations and block time for the weekly live session.",
 };
 
 const cohortFrom = (i: number, weeks = 4): CoachCohort => ({
@@ -286,11 +286,11 @@ export function coachNote(t: CoachTimeline, p: Progress): string {
   if (p.total > 0 && p.done === p.total)
     return "You've done everything on the list. Keep your Sunday review going and keep applying; that rhythm is what lasts.";
   if (t.status === "before")
-    return "You're set for day one. Nothing to rush: get familiar with your systems and protect time for the live session.";
+    return "You're set for day one. Nothing to rush: get familiar with your workspace and protect time for the live session.";
   if (t.status === "closed")
     return p.done > 0
-      ? "Your cohort window has closed. Everything you finished is still yours, and your systems keep working after the cohort."
-      : "Your cohort window has closed. Your systems are still here; pick one item and start there whenever you're ready.";
+      ? "Your cohort window has closed. Everything you finished is still yours, and your workspace keeps working after the cohort."
+      : "Your cohort window has closed. Your workspace is still here; pick one item and start there whenever you're ready.";
   const expected = t.elapsed * p.total;
   if (p.done >= expected)
     return "You're moving at a good pace. Keep this week's focus small and finish what you start.";

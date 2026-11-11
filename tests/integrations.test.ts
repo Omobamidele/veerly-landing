@@ -24,6 +24,7 @@ test("brevo sink: syncs consented contact with attributes and lists (mocked fetc
         emailConsent: true,
         whatsappConsent: true,
         level: "beginner",
+        careerPath: "Administration and Virtual Assistance",
       }).data,
     );
     assert.equal(calls.length, 1);
@@ -106,6 +107,25 @@ test("checkout: 422 when no level is chosen", async () => {
   assert.equal(res.status, 422);
   const j = await res.json();
   assert.equal(j.errors.level, "Choose Beginner, Intermediate or Advanced.");
+  delete process.env.NEXT_PUBLIC_LAUNCH_STATE;
+  delete process.env.PAYSTACK_SECRET_KEY;
+});
+
+test("checkout: 422 when no career path is chosen", async () => {
+  freshStore();
+  process.env.NEXT_PUBLIC_LAUNCH_STATE = "enrol";
+  process.env.PAYSTACK_SECRET_KEY = "sk_test_mock";
+  const { POST } = await import("../app/api/checkout/route");
+  const res = await POST(
+    new Request("http://localhost/api/checkout", {
+      method: "POST",
+      body: JSON.stringify({ email: "a@example.com", level: "beginner" }),
+      headers: { "x-forwarded-for": `t${Math.random()}` },
+    }),
+  );
+  assert.equal(res.status, 422);
+  const j = await res.json();
+  assert.equal(j.errors.careerPath, "Choose a career path.");
   delete process.env.NEXT_PUBLIC_LAUNCH_STATE;
   delete process.env.PAYSTACK_SECRET_KEY;
 });

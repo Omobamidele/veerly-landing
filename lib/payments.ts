@@ -1,4 +1,4 @@
-import { parseLevel } from "./levels";
+import { parseLevel, parsePath } from "./levels";
 import { isExpectedCharge, parseMetadata, type PaystackTransaction } from "./paystack";
 import { markPaid } from "./waitlist";
 
@@ -15,6 +15,7 @@ export async function processSuccessfulCharge(tx: PaystackTransaction) {
     currency: tx.currency,
     paidAt: tx.paid_at,
     level: parseLevel(meta.level),
+    careerPath: parsePath(meta.careerPath ?? meta.pathLabel ?? meta.path),
   });
   return { ok: true as const, ...result };
 }

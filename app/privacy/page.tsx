@@ -24,7 +24,7 @@ export default function Privacy() {
           <h2>Why we use it</h2>
           <ul>
             <li>To tell you when founding enrolment opens, in the ways you chose.</li>
-            <li>To personalize your career plan and the Veerly systems you receive.</li>
+            <li>To personalize your career plan and the Veerly workspace you receive.</li>
             <li>To deliver what you paid for and support you during the cohort.</li>
           </ul>
 

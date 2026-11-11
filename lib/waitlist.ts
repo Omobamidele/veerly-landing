@@ -1,6 +1,6 @@
 import { randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { CONSENT_VERSION, consentText } from "./consent";
-import { parseLevel, VA_CAREER_PATH, type VaLevel } from "./levels";
+import { parseLevel, parsePath, type CareerPath, type LevelId } from "./levels";
 import { careerPaths, careerStages } from "./options";
 import { toE164 } from "./phone";
 import { dispatch } from "./sinks";
@@ -36,8 +36,10 @@ export function validateStep1(body: Record<string, unknown>) {
   if (!emailConsent && !whatsappConsent) errors.consent = "Choose at least one way for us to tell you about the launch.";
   const level = parseLevel(body.level);
   if (!level) errors.level = "Choose Beginner, Intermediate or Advanced.";
+  const careerPath = parsePath(body.careerPath ?? body.path);
+  if (!careerPath) errors.careerPath = "Choose a career path.";
 
-  return { data: { name, email, whatsapp, whatsappCountry: whatsapp ? whatsappCountry : null, emailConsent, whatsappConsent, level }, errors };
+  return { data: { name, email, whatsapp, whatsappCountry: whatsapp ? whatsappCountry : null, emailConsent, whatsappConsent, level, careerPath }, errors };
 }
 
 // ---------- Step 2 ----------
@@ -46,7 +48,7 @@ export function validateProfile(body: Record<string, unknown>) {
     country: clean(body.country, 80),
     profession: clean(body.profession, 160),
     careerStage: clean(body.careerStage, 80),
-    careerPath: clean(body.careerPath, 80),
+    careerPath: parsePath(body.careerPath ?? body.path) ?? clean(body.careerPath, 80),
     linkedin: clean(body.linkedin, 300),
   };
   const level = parseLevel(body.level);
@@ -102,7 +104,7 @@ export async function upsertSignup(d: ReturnType<typeof validateStep1>["data"], 
   if (existing) {
     const s: Signup = {
       ...existing,
-      profile: d.level ? { ...existing.profile, level: d.level } : existing.profile,
+      profile: withPlan(existing.profile, d.level, d.careerPath),
       whatsapp: existing.whatsapp || d.whatsapp,
       whatsappCountry: existing.whatsappCountry || d.whatsappCountry,
       consent: {
@@ -127,7 +129,7 @@ export async function upsertSignup(d: ReturnType<typeof validateStep1>["data"], 
       email: consent(d.emailConsent, consentText.email, at),
       whatsapp: consent(d.whatsappConsent && Boolean(d.whatsapp), consentText.whatsapp, at),
     },
-    profile: d.level ? { level: d.level } : {},
+    profile: withPlan({}, d.level, d.careerPath),
     payment: blankPayment(),
     source,
     createdAt: at,
@@ -149,23 +151,32 @@ export async function updateProfile(id: string, token: string, p: Profile) {
   return save(next, "profile.updated");
 }
 
-function withLevel(profile: Signup["profile"], level?: VaLevel | null): Signup["profile"] {
-  if (!level) return profile;
+function withPlan(profile: Signup["profile"], level?: LevelId | null, careerPath?: CareerPath | null): Signup["profile"] {
+  if (!level && !careerPath) return profile;
   return {
     ...profile,
-    level,
-    careerPath: profile.careerPath || VA_CAREER_PATH,
+    ...(level ? { level } : {}),
+    ...(careerPath ? { careerPath } : {}),
   };
 }
 
 /** Find or create the record a checkout belongs to. */
-export async function signupForCheckout(email: string, name: string, level?: VaLevel | null) {
+export async function signupForCheckout(
+  email: string,
+  name: string,
+  plan?: { level?: LevelId | null; careerPath?: CareerPath | null },
+) {
   const store = getStore();
   const existing = await store.findByEmail(email);
   const at = nowIso();
+  const level = plan?.level;
+  const careerPath = plan?.careerPath;
   if (existing) {
-    if (!level || existing.profile.level === level) return existing;
-    const s: Signup = { ...existing, profile: withLevel(existing.profile, level), updatedAt: at };
+    const same =
+      (!level || existing.profile.level === level) &&
+      (!careerPath || existing.profile.careerPath === careerPath);
+    if (same) return existing;
+    const s: Signup = { ...existing, profile: withPlan(existing.profile, level, careerPath), updatedAt: at };
     await store.put(s);
     return s;
   }
@@ -177,7 +188,7 @@ export async function signupForCheckout(email: string, name: string, level?: VaL
     whatsapp: null,
     whatsappCountry: null,
     consent: { email: consent(false, consentText.email, at), whatsapp: consent(false, consentText.whatsapp, at) },
-    profile: withLevel({}, level),
+    profile: withPlan({}, level, careerPath),
     payment: blankPayment(),
     source: "checkout",
     createdAt: at,
@@ -195,15 +206,15 @@ export async function markPending(id: string, reference: string, amount: number,
 }
 
 /** Idempotent: the same reference is only processed once. */
-export async function markPaid(opts: { signupId?: string; email: string; name?: string; reference: string; amount: number; currency: string; paidAt?: string; level?: VaLevel | null }) {
+export async function markPaid(opts: { signupId?: string; email: string; name?: string; reference: string; amount: number; currency: string; paidAt?: string; level?: LevelId | null; careerPath?: CareerPath | null }) {
   const store = getStore();
   let s = (opts.signupId && (await store.get(opts.signupId))) || (await store.findByEmail(opts.email));
-  if (!s) s = await signupForCheckout(opts.email.toLowerCase(), opts.name || "", opts.level);
+  if (!s) s = await signupForCheckout(opts.email.toLowerCase(), opts.name || "", { level: opts.level, careerPath: opts.careerPath });
   const refs = s.payment.references || [];
   if (refs.includes(opts.reference)) return { signup: s, alreadyProcessed: true };
   const next: Signup = {
     ...s,
-    profile: withLevel(s.profile, opts.level),
+    profile: withPlan(s.profile, opts.level, opts.careerPath),
     payment: {
       status: "paid",
       provider: "paystack",

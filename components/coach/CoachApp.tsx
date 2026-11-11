@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { RotateCcw } from "lucide-react";
+import { IconRestart } from "@/components/icons/veerly-icons";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
@@ -271,7 +271,7 @@ function ClosedPanel({
         <span className="text-white">
           {fmtDay(lastDay(t), { weekday: true })}
         </span>
-        . Your Notion systems are yours to keep.
+        . Your Notion workspace is yours to keep.
       </p>
     </div>
   );
@@ -497,7 +497,7 @@ function RestartLink({
           className="inline-flex items-center gap-1.5 rounded text-[12px] font-medium text-ink-3 underline-offset-4 hover:text-ink hover:underline disabled:opacity-50"
           data-coach-restart
         >
-          <RotateCcw className="size-3" aria-hidden="true" /> Restart
+          <IconRestart className="size-3" aria-hidden="true" /> Restart
         </button>
       </AlertDialogTrigger>
       <AlertDialogContent>
@@ -505,7 +505,7 @@ function RestartLink({
           <AlertDialogTitle>Restart {cohort.name}?</AlertDialogTitle>
           <AlertDialogDescription>
             This clears your ticks in this browser and starts your cohort clock
-            again from today. Your Notion systems aren&rsquo;t affected.
+            again from today. Your Notion workspace isn&rsquo;t affected.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

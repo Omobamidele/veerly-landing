@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import Logo from "@/components/Logo";
 import { site } from "@/lib/config";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +25,7 @@ export function Nav({
     let raf = 0;
     const update = () => {
       raf = 0;
-      setOnStage(end.getBoundingClientRect().top > 64);
+      setOnStage(end.getBoundingClientRect().top > 80);
     };
     const onScroll = () => {
       if (!raf) raf = requestAnimationFrame(update);
@@ -50,19 +50,9 @@ export function Nav({
           : "border-line bg-ground/85 backdrop-blur-md backdrop-saturate-150",
       )}
     >
-      <div className="wrap flex h-16 items-center gap-8">
+      <div className="wrap flex h-20 items-center gap-8">
         <Link href="/" aria-label="Veerly home" className="shrink-0">
-          <Image
-            src={
-              onStage
-                ? "/brand/veerly-logo-white.svg"
-                : "/brand/veerly-logo.svg"
-            }
-            alt="Veerly"
-            width={96}
-            height={19}
-            priority
-          />
+          <Logo tone={onStage ? "stage" : "light"} />
         </Link>
         {cta ? (
           <nav
@@ -71,7 +61,7 @@ export function Nav({
           >
             {[
               ["/#systems", "What you get"],
-              ["/#paths", "Career paths"],
+              ["/#levels", "Your plan"],
               ["/#pricing", "Pricing"],
               ["/#faq", "FAQ"],
             ].map(([href, text]) => (
@@ -105,12 +95,7 @@ export function Footer({ belief = site.belief }: { belief?: string }) {
     <footer className="border-t border-line bg-ground">
       <div className="wrap grid gap-10 py-14 md:grid-cols-12">
         <div className="flex flex-col gap-4 md:col-span-6">
-          <Image
-            src="/brand/veerly-logo.svg"
-            alt="Veerly"
-            width={88}
-            height={17}
-          />
+          <Logo />
           <p className="max-w-[46ch] text-sm text-ink-2">{belief}</p>
         </div>
         <nav

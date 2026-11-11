@@ -1,5 +1,6 @@
-import { ArrowDown, Check } from "lucide-react";
+import { IconArrowDown, IconCheck } from "@/components/icons/veerly-icons";
 import Countdown from "@/components/Countdown";
+import EnrolBanner from "@/components/EnrolBanner";
 import JoinHeading from "@/components/JoinHeading";
 import LevelChoice from "@/components/LevelChoice";
 import { LevelProvider } from "@/components/LevelProvider";
@@ -36,6 +37,7 @@ import {
   parsePhase,
   promoAt,
 } from "@/lib/launch";
+import { countryFromHeaders } from "@/lib/geo";
 import {
   FALLBACK_CURRENCY,
   currencyForCountry,
@@ -105,7 +107,7 @@ const personalization: [string, string][] = [
     "Skills to develop, roles to pursue, companies to target and projects to build.",
   ],
   [
-    "Your systems follow your plan",
+    "Your workspace follows your plan",
     "Job search, portfolio and interview prep are shaped around your path, not a generic checklist.",
   ],
   [
@@ -152,9 +154,8 @@ const paths: [string, string][] = [
 ];
 
 const included = [
-  "Veerly Job Hunt OS",
-  "Veerly Portfolio Builder",
-  "Veerly Interview Preparation System",
+  "One Notion workspace for your path and level",
+  "Inside it: Job Hunt OS, Portfolio Builder and Interview Preparation System",
   "Your personalized career plan",
   "Cohort activities and resources",
   "Keep your Notion resources after the cohort",
@@ -179,7 +180,7 @@ export default async function Home({
   const c1Window = "1–28 February 2027";
   const payments = paymentsEnabled();
   const usdEnabled = pricing.usdEnabled;
-  const country = (await headers()).get("x-vercel-ip-country");
+  const country = countryFromHeaders(await headers());
   const initialCurrency = currencyForCountry(country) ?? FALLBACK_CURRENCY;
   const ngn = formatPrice("NGN");
   const usd = formatPrice("USD");
@@ -197,13 +198,13 @@ export default async function Home({
     ],
     [
       `From ${shortLabel}`,
-      "Choose your level and pay once",
-      `Pick Beginner, Intermediate or Advanced, then one payment through Paystack (${ngn} in Nigeria, ${usd} elsewhere). You get the workspace for the level you choose, then a short career assessment.`,
+      "Choose your path and level, then pay once",
+      `Pick a career path and Beginner, Intermediate or Advanced, then one payment through Paystack (${ngn} in Nigeria, ${usd} elsewhere). You get the workspace for the path and level you choose, then a short career assessment.`,
     ],
     [
       formatWhen(new Date(c1.startsAt)),
       `${c1.name} starts`,
-      "Your personalized plan, your three Notion systems, and the founding cohort.",
+      "Your personalized plan, your Notion workspace for the path and level you chose, and the founding cohort.",
     ],
   ];
 
@@ -223,12 +224,12 @@ export default async function Home({
         : `The founding cohort is a one-time payment of ${ngn} (about ${usd}), and this page can show the price in your own currency for reference. There's no subscription. When enrolment opens you'll pay ${ngn} in naira through Paystack's secure checkout; if your card uses another currency, your bank converts it. Joining the waitlist is free.`,
     ],
     [
-      "How are the systems delivered?",
-      "Your three systems are delivered in Notion, which has a free plan. They're set up for you, so you mainly fill things in and tick things off. For the Virtual Assistant path, you get the workspace for the level you chose — Beginner, Intermediate or Advanced — not all three. You'll get access instructions right after payment.",
+      "How is my workspace delivered?",
+      "You get one Notion workspace for the career path and level you choose — Beginner, Intermediate or Advanced — and only that one, not every version. Job Hunt OS, Portfolio Builder and Interview Preparation System are all inside it. Notion has a free plan, and the workspace is set up for you, so you mainly fill things in and tick things off. You'll get access instructions right after payment.",
     ],
     [
       "What's the difference between Beginner, Intermediate and Advanced?",
-      "Beginner starts from zero with inbox, calendar and everyday admin. Intermediate is for people who already know the basics and want to run client systems. Advanced is for people who already work with clients and want to specialise, automate and lead. Each level has its own workspace, and you only receive the one you choose. The price is the same for every level.",
+      "Every career path has three levels. Beginner starts from zero and assumes very little. Intermediate is for people who already know the basics of that path and want to run systems, not just single tasks. Advanced is for people who already do the work and want to specialise, lead or design how the work is done. Each path and level has its own workspace, and you only receive the one you choose. The price is the same for every path and level.",
     ],
     [
       "When does the cohort start?",
@@ -237,10 +238,6 @@ export default async function Home({
     [
       "Will Veerly get me a job?",
       "No one can honestly promise that, and we won't. Veerly helps you get organised, build proof of your skills and prepare properly. Hiring decisions are made by employers, and results depend on your effort, your field and the job market.",
-    ],
-    [
-      "Can I get a refund?",
-      "Our refund policy will be published before enrolment opens, so you can read it before you pay.",
     ],
     [
       "What happens after the cohort ends?",
@@ -268,6 +265,7 @@ export default async function Home({
         <a className="skip" href="#main">
           Skip to content
         </a>
+        <EnrolBanner />
         <Nav tone="stage" cta={<NavCta />} />
         <Motion>
           <main id="main">
@@ -276,7 +274,7 @@ export default async function Home({
               aria-labelledby="hero-title"
               className="relative bg-stage [background-image:radial-gradient(80%_60%_at_10%_-10%,rgb(255_255_255/0.12),transparent_60%),radial-gradient(60%_50%_at_100%_110%,color-mix(in_oklab,var(--stage-deep)_55%,transparent),transparent_70%)]"
             >
-              <div className="wrap flex flex-col pt-16 sm:pt-20 lg:min-h-[min(calc(100svh-4rem),820px)] lg:pt-28">
+              <div className="wrap flex flex-col pt-16 sm:pt-20 lg:min-h-[min(calc(100svh-8rem),820px)] lg:pt-24">
                 <h1
                   id="hero-title"
                   className="display text-[clamp(44px,7vw,96px)] leading-[0.98] text-white"
@@ -304,7 +302,7 @@ export default async function Home({
                       className="flex flex-col gap-3 sm:flex-row sm:items-center"
                     >
                       <LaunchCta
-                        variant="stage"
+                        variant="yellow"
                         size="lg"
                         arrow
                         className="w-full sm:w-auto"
@@ -314,7 +312,7 @@ export default async function Home({
                         className="inline-flex h-12 items-center justify-center gap-2 rounded-lg border border-white/20 px-5 text-[15px] font-medium text-white no-underline transition-colors hover:border-white/40 hover:bg-white/5 sm:border-transparent sm:px-4"
                       >
                         See what&rsquo;s inside{" "}
-                        <ArrowDown className="size-4" aria-hidden="true" />
+                        <IconArrowDown className="size-4" aria-hidden="true" />
                       </a>
                     </div>
                     <div data-enter="fade" className="flex flex-col gap-2">
@@ -350,7 +348,7 @@ export default async function Home({
                       </span>
                       <span className="flex flex-1 items-center justify-between gap-3 text-[15px] font-medium text-white">
                         {sys.name}
-                        <ArrowDown
+                        <IconArrowDown
                           className="size-4 shrink-0 text-white/80 transition-transform group-hover:translate-y-0.5 group-hover:text-white"
                           aria-hidden="true"
                         />
@@ -373,12 +371,12 @@ export default async function Home({
                   <h2 id="systems-title" className="h2 lg:col-span-7">
                     Three connected systems.{" "}
                     <span className="quiet">
-                      One purchase, shaped by your plan.
+                      One Notion workspace for your path and level.
                     </span>
                   </h2>
                   <p className="max-w-[44ch] text-lg leading-relaxed text-ink-2 lg:col-span-4 lg:col-start-9 lg:pt-2">
-                    Delivered in Notion and set up for you, so you mainly fill
-                    things in and tick things off. Each one follows the plan
+                    All three sit inside the one workspace you get, set up for
+                    you, so you mainly fill things in and tick things off. Each one follows the plan
                     from your onboarding assessment.
                   </p>
                 </div>
@@ -421,7 +419,7 @@ export default async function Home({
                               key={pt}
                               className="flex items-center gap-3 border-b border-line py-3.5 text-[16px] text-ink last:border-b-0"
                             >
-                              <Check
+                              <IconCheck
                                 className="size-4 shrink-0 text-brand"
                                 strokeWidth={2.25}
                                 aria-hidden="true"
@@ -436,6 +434,8 @@ export default async function Home({
                 </ol>
               </div>
             </section>
+
+            <Workspace />
 
             {/* ───── Personalization ───── */}
             <section
@@ -571,9 +571,9 @@ export default async function Home({
                     </span>
                   </h2>
                   <p className="max-w-[44ch] text-lg leading-relaxed text-ink-2 lg:col-span-4 lg:col-start-9 lg:pt-2">
-                    Choose your path in the assessment, or tell us you&rsquo;re
-                    not sure yet. Your plan, projects and interview practice
-                    follow it.
+                    Every path has a Beginner, Intermediate and Advanced plan.
+                    Choose your path and level when you join, and you only
+                    receive the workspace for that combination.
                   </p>
                 </div>
                 <ul className="grid overflow-hidden rounded-xl border border-line bg-line [gap:1px] sm:grid-cols-2 lg:grid-cols-5">
@@ -597,8 +597,6 @@ export default async function Home({
                 </p>
               </div>
             </section>
-
-            <Workspace />
 
             <LevelChoice cohortWindow={c1Window} />
 
@@ -692,7 +690,7 @@ export default async function Home({
                         key={i}
                         className="flex items-center gap-3 border-b border-white/12 py-4 text-[16px] text-white/85"
                       >
-                        <Check
+                        <IconCheck
                           className="size-4 shrink-0 text-tint"
                           strokeWidth={2.25}
                           aria-hidden="true"

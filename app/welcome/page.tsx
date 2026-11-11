@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CalendarPlus, Check, Clock } from "lucide-react";
+import { IconCalendarPlus, IconCheck, IconClock } from "@/components/icons/veerly-icons";
 import { Footer, Nav } from "@/components/SiteChrome";
 import { paymentsEnabled, site } from "@/lib/config";
 import { cohortOne, formatWhen } from "@/lib/launch";
-import { LEVEL_LABEL, parseLevel, VA_PATH_LABEL, type VaLevel } from "@/lib/levels";
+import { LEVEL_LABEL, parseLevel, parsePath, pathLabel, planSummary, type CareerPath, type LevelId } from "@/lib/levels";
 import { processSuccessfulCharge } from "@/lib/payments";
 import { parseMetadata, verifyTransaction } from "@/lib/paystack";
 
@@ -15,22 +15,25 @@ export const metadata: Metadata = {
 };
 
 type State = "paid" | "pending" | "failed" | "none";
-type Resolved = { state: State; level: VaLevel | null };
+type Resolved = { state: State; level: LevelId | null; path: CareerPath | null };
 
 async function resolveState(
   reference?: string,
   preview?: string,
   previewLevel?: string,
+  previewPath?: string,
 ): Promise<Resolved> {
   if (preview === "paid")
-    return { state: "paid", level: parseLevel(previewLevel) };
-  if (!reference || !paymentsEnabled()) return { state: "none", level: null };
+    return { state: "paid", level: parseLevel(previewLevel), path: parsePath(previewPath) };
+  if (!reference || !paymentsEnabled()) return { state: "none", level: null, path: null };
   try {
     const tx = await verifyTransaction(reference); // never trust the redirect alone
-    const level = parseLevel(parseMetadata(tx.metadata).level);
+    const meta = parseMetadata(tx.metadata);
+    const level = parseLevel(meta.level);
+    const path = parsePath(meta.careerPath ?? meta.pathLabel ?? meta.path);
     if (tx.status === "success") {
       const r = await processSuccessfulCharge(tx); // idempotent with the webhook
-      return { state: r.ok ? "paid" : "failed", level };
+      return { state: r.ok ? "paid" : "failed", level, path };
     }
     return {
       state:
@@ -40,10 +43,11 @@ async function resolveState(
           ? "pending"
           : "failed",
       level,
+      path,
     };
   } catch (err) {
     console.error("[welcome] verify failed", err);
-    return { state: "pending", level: null };
+    return { state: "pending", level: null, path: null };
   }
 }
 
@@ -53,12 +57,15 @@ export default async function Welcome({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const { state, level } = await resolveState(
+  const { state, level, path } = await resolveState(
     sp.reference || sp.trxref,
     sp.preview,
     sp.level,
+    sp.path,
   );
   const levelName = level ? LEVEL_LABEL[level] : null;
+  const chosenPath = pathLabel(path);
+  const plan = planSummary(path, level);
   const c1 = cohortOne();
   const cohortStart = formatWhen(new Date(c1.startsAt));
   const c1Window = "1–28 February 2027";
@@ -71,14 +78,14 @@ export default async function Welcome({
           {state === "paid" ? (
             <>
               <p className="status-pill ok">
-                <Check size={14} strokeWidth={2.5} aria-hidden="true" /> Payment
+                <IconCheck size={14} strokeWidth={2.5} aria-hidden="true" /> Payment
                 confirmed
               </p>
               <h1>Welcome to Veerly.</h1>
               <p className="lede">
                 You&rsquo;re in the founding cohort
-                {levelName
-                  ? `, on the ${VA_PATH_LABEL} ${levelName} plan. You'll get the ${levelName} workspace only. Cohort 1 runs ${c1Window}`
+                {plan
+                  ? `, on the ${plan} plan. You'll get the ${chosenPath} ${levelName} workspace only. Cohort 1 runs ${c1Window}`
                   : ""}
                 . Here&rsquo;s what happens next.
                 {process.env.BREVO_PAID_TEMPLATE_ID
@@ -108,16 +115,15 @@ export default async function Welcome({
                 <li>
                   <span className="num">2</span>
                   <div>
-                    <h3>Get your three Notion systems</h3>
+                    <h3>Get your Notion workspace</h3>
                     <p>
                       Create a free Notion account with the same email you paid
-                      with. We&rsquo;ll share Job Hunt OS, Portfolio Builder and
-                      the Interview Preparation System with you, personalized to
-                      your plan
-                      {levelName
-                        ? `, in your ${VA_PATH_LABEL} ${levelName} workspace`
-                        : ""}
-                      .
+                      with. We&rsquo;ll share{" "}
+                      {plan
+                        ? `your ${plan} workspace`
+                        : "the workspace for the path and level you chose"}
+                      , with Job Hunt OS, Portfolio Builder and the Interview
+                      Preparation System inside it.
                     </p>
                     {site.notionAccessUrl ? (
                       <a
@@ -144,7 +150,7 @@ export default async function Welcome({
                         className="btn btn-secondary"
                         href="/api/calendar/cohort.ics"
                       >
-                        <CalendarPlus size={16} aria-hidden="true" /> Add to
+                        <IconCalendarPlus size={16} aria-hidden="true" /> Add to
                         calendar
                       </a>
                     ) : null}
@@ -155,7 +161,7 @@ export default async function Welcome({
           ) : state === "pending" ? (
             <>
               <p className="status-pill">
-                <Clock size={14} aria-hidden="true" /> Confirming payment
+                <IconClock size={14} aria-hidden="true" /> Confirming payment
               </p>
               <h1>We&rsquo;re confirming your payment.</h1>
               <p className="lede">

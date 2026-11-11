@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { IconArrowRight } from "@/components/icons/veerly-icons";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "./Currency";
 import { useLaunch } from "./LaunchProvider";
@@ -8,13 +8,13 @@ import { useLevel } from "./LevelProvider";
 
 /** Primary call to action that follows the launch state. */
 export default function LaunchCta({
-  variant = "default",
+  variant = "yellow",
   size = "default",
   short = false,
   arrow = false,
   className,
 }: {
-  variant?: "default" | "stage" | "stage-ghost" | "outline";
+  variant?: "default" | "yellow" | "stage" | "stage-ghost" | "outline";
   size?: "default" | "sm" | "lg";
   short?: boolean;
   arrow?: boolean;
@@ -22,7 +22,7 @@ export default function LaunchCta({
 }) {
   const { launched } = useLaunch();
   const { price } = useCurrency();
-  const { level } = useLevel();
+  const { path, level } = useLevel();
   const text = launched
     ? short
       ? "Get access"
@@ -30,25 +30,25 @@ export default function LaunchCta({
     : "Join the waitlist";
   return (
     <Button asChild variant={variant} size={size} className={className}>
-      <a href={level ? "#join-card" : "#levels"} data-launch-cta>
+      <a href={path && level ? "#join-card" : "#levels"} data-launch-cta>
         {text}
-        {arrow ? <ArrowRight data-icon="inline-end" /> : null}
+        {arrow ? <IconArrowRight data-icon="inline-end" /> : null}
       </a>
     </Button>
   );
 }
 
-/** Nav CTA: white on the brand stage, brand once the nav turns light. */
+/** Nav CTA: yellow on every surface so it stays the highlighted action. */
 export function NavCta() {
   return (
     <>
       <LaunchCta
         short
         size="sm"
-        variant="stage"
+        variant="yellow"
         className="in-data-[on-stage=false]:hidden"
       />
-      <LaunchCta short size="sm" className="in-data-[on-stage=true]:hidden" />
+      <LaunchCta short size="sm" variant="yellow" className="in-data-[on-stage=true]:hidden" />
     </>
   );
 }

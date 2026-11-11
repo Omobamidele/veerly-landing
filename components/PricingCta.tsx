@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight } from "lucide-react";
+import { IconArrowRight } from "@/components/icons/veerly-icons";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "./Currency";
 import { useLaunch } from "./LaunchProvider";
@@ -13,13 +13,13 @@ export default function PricingCta({
 }) {
   const { launched } = useLaunch();
   const { price } = useCurrency();
-  const { level } = useLevel();
+  const { path, level } = useLevel();
   return (
     <div className="flex flex-col items-start gap-3">
-      <Button asChild variant="stage" size="lg" className="w-full sm:w-auto">
-        <a href={level ? "#join-card" : "#levels"}>
+      <Button asChild variant="yellow" size="lg" className="w-full sm:w-auto">
+        <a href={path && level ? "#join-card" : "#levels"}>
           {launched ? `Get founding access, ${price}` : "Join the waitlist"}
-          <ArrowRight data-icon="inline-end" />
+          <IconArrowRight data-icon="inline-end" />
         </a>
       </Button>
       <p className="text-[13px] text-white/60">

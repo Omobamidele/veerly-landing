@@ -18,7 +18,7 @@ wide, with a transparent background.
 - Never put the violet logo on a violet background; use the white one there.
 
 ## App icon (icon/)
-The violet rounded square with the white V, at 32 to 1024 px, plus the 180 px Apple touch icon. Use it for
+The blue (#0075AD) rounded square with the white V and yellow (#FFD84D) notch, at 32 to 1024 px (recoloured from violet in v9.2 to match `app/icon.svg`), plus the 180 px Apple touch icon. Use it for
 social profile pictures (512 or 1024).
 
 ## Mascot (mascot/)

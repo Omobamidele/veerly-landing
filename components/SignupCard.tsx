@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, CalendarPlus, Check, Lock } from "lucide-react";
+import { IconArrowRight, IconCalendarPlus, IconCheck, IconLock } from "@/components/icons/veerly-icons";
 import { useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,7 +29,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { consentText } from "@/lib/consent";
-import { VA_PATH_LABEL } from "@/lib/levels";
+import { planSummary } from "@/lib/levels";
 import { careerPaths, careerStages } from "@/lib/options";
 import { countryOptions, toE164 } from "@/lib/phone";
 import { cn } from "@/lib/utils";
@@ -98,24 +98,25 @@ export default function SignupCard(props: {
 }
 
 function PlanLine() {
-  const { level, label } = useLevel();
-  if (!level || !label) {
+  const { path, pathLabel, level, label } = useLevel();
+  const plan = planSummary(path, level);
+  if (!plan) {
     return (
       <p className="text-sm text-ink-2" data-plan-line="missing">
         <a
           href="#levels"
           className="font-medium text-brand underline-offset-4 hover:underline"
         >
-          Choose your level
+          Choose your path and level
         </a>{" "}
-        first. Each level gets its own workspace.
+        first. Each combination gets its own workspace.
       </p>
     );
   }
   return (
     <p className="text-sm text-ink-2" data-plan-line={level}>
-      Your plan: {VA_PATH_LABEL} · {label}. You&rsquo;ll get the {label}{" "}
-      workspace only.{" "}
+      Your plan: {plan}. You&rsquo;ll get the {pathLabel} {label} workspace
+      only.{" "}
       <a
         href="#levels"
         className="font-medium text-brand underline-offset-4 hover:underline"
@@ -164,7 +165,7 @@ function WaitlistFlow({
   cohortWindow: string;
 }) {
   const { shortLabel, launched } = useLaunch();
-  const { level, label: levelName } = useLevel();
+  const { path, pathLabel, level, label: levelName } = useLevel();
   const countries = useMemo(() => countryOptions(), []);
   const [step, setStep] = useState<Step>("join");
   const [busy, setBusy] = useState(false);
@@ -204,10 +205,11 @@ function WaitlistFlow({
       e.consent =
         "Choose at least one way for us to tell you when enrolment opens.";
     if (!level) e.level = "Choose Beginner, Intermediate or Advanced.";
+    if (!path) e.careerPath = "Choose a career path.";
     setErrors(e);
     if (Object.keys(e).length) {
       setMessage("");
-      if (e.level && Object.keys(e)[0] === "level") {
+      if ((e.level || e.careerPath) && (Object.keys(e)[0] === "level" || Object.keys(e)[0] === "careerPath")) {
         document.getElementById("levels")?.scrollIntoView({
           behavior: "smooth",
           block: "start",
@@ -229,6 +231,7 @@ function WaitlistFlow({
         ...v,
         whatsappCountry: dial,
         level,
+        careerPath: path,
       });
       if (!r.ok) {
         setErrors(r.json.errors || {});
@@ -309,8 +312,10 @@ function WaitlistFlow({
           sub="Free. Takes under a minute. We'll tell you the moment founding enrolment opens."
         />
         <PlanLine />
-        {errors.level ? (
-          <FieldError id="level-error">{errors.level}</FieldError>
+        {errors.level || errors.careerPath ? (
+          <FieldError id="level-error">
+            {errors.careerPath || errors.level}
+          </FieldError>
         ) : null}
         <FieldGroup className="gap-4">
           <Field data-invalid={errors.name ? true : undefined}>
@@ -444,7 +449,7 @@ function WaitlistFlow({
         className="mt-1 grid size-7 shrink-0 place-items-center rounded-full bg-proof text-white"
         aria-hidden="true"
       >
-        <Check className="size-4" strokeWidth={2.5} />
+        <IconCheck className="size-4" strokeWidth={2.5} />
       </span>
       <CardHead
         headingRef={headingRef}
@@ -461,7 +466,7 @@ function WaitlistFlow({
   const calendar = (
     <Button asChild variant="outline" size="lg" className="w-full">
       <a href="/api/calendar/launch.ics">
-        <CalendarPlus data-icon="inline-start" />
+        <IconCalendarPlus data-icon="inline-start" />
         Add enrolment opening to your calendar
       </a>
     </Button>
@@ -598,8 +603,8 @@ function WaitlistFlow({
       <p className="text-[15px] text-ink-2">
         Thanks{saved?.firstName ? `, ${saved.firstName}` : ""}. That&rsquo;s
         everything for now
-        {levelName
-          ? `. You're on the list for the ${VA_PATH_LABEL} ${levelName} plan, and you'll get the ${levelName} workspace when enrolment opens`
+        {levelName && pathLabel
+          ? `. You're on the list for the ${pathLabel} ${levelName} plan, and you'll get the ${pathLabel} ${levelName} workspace when enrolment opens`
           : ""}
         . Keep an eye on {saved?.whatsapp ? "WhatsApp" : "your inbox"} on{" "}
         {shortLabel}.
@@ -613,7 +618,7 @@ function WaitlistFlow({
           rel="noopener noreferrer"
         >
           Join the Veerly WhatsApp channel{" "}
-          <ArrowRight className="size-3.5" aria-hidden="true" />
+          <IconArrowRight className="size-3.5" aria-hidden="true" />
         </a>
       ) : null}
       <Alert msg={message} />
@@ -652,7 +657,7 @@ function CheckoutPanel({
   const [errors, setErrors] = useState<Errors>({});
   const [message, setMessage] = useState("");
   const { currency, price, chargePrice } = useCurrency();
-  const { level, label: levelName } = useLevel();
+  const { path, pathLabel, level, label: levelName } = useLevel();
 
   async function submit(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
@@ -663,6 +668,7 @@ function CheckoutPanel({
     if (!EMAIL_RE.test((v.email || "").trim()))
       e.email = "Enter the email you'd like your access sent to.";
     if (!level) e.level = "Choose Beginner, Intermediate or Advanced.";
+    if (!path) e.careerPath = "Choose a career path.";
     if (Object.keys(e).length) {
       setErrors(e);
       setMessage(e.level || "");
@@ -672,7 +678,7 @@ function CheckoutPanel({
     setBusy(true);
     setMessage("");
     try {
-      const r = await post("/api/checkout", { ...v, currency, level });
+      const r = await post("/api/checkout", { ...v, currency, level, careerPath: path });
       if (r.ok && r.json.url) {
         window.location.assign(r.json.url);
         return;
@@ -706,26 +712,29 @@ function CheckoutPanel({
         data-checkout-summary
       >
         <p className="font-medium text-ink">
-          {VA_PATH_LABEL}
-          {levelName ? ` · ${levelName}` : ""}
+          {pathLabel && levelName
+            ? `${pathLabel} · ${levelName}`
+            : pathLabel || "Choose your path and level"}
         </p>
         <p className="text-ink-2">
           {price}, one-time. Cohort 1, {cohortWindow}.
         </p>
         <p className="text-ink-3">
-          {levelName
-            ? `You'll get the ${levelName} workspace only.`
-            : "Each level gets its own workspace. Choose a level first."}{" "}
+          {pathLabel && levelName
+            ? `You'll get the ${pathLabel} ${levelName} workspace only.`
+            : "Each path and level gets its own workspace. Choose both first."}{" "}
           <a
             href="#levels"
             className="font-medium text-brand underline-offset-4 hover:underline"
           >
-            {levelName ? "Change" : "Choose your level"}
+            {pathLabel && levelName ? "Change" : "Choose your path and level"}
           </a>
         </p>
       </div>
-      {errors.level ? (
-        <FieldError id="co-level-error">{errors.level}</FieldError>
+      {errors.level || errors.careerPath ? (
+        <FieldError id="co-level-error">
+          {errors.careerPath || errors.level}
+        </FieldError>
       ) : null}
       {paymentsEnabled ? (
         <>
@@ -756,7 +765,7 @@ function CheckoutPanel({
               {busy ? (
                 <Spinner data-icon="inline-start" />
               ) : (
-                <Lock data-icon="inline-start" />
+                <IconLock data-icon="inline-start" />
               )}
               {busy
                 ? "Opening secure checkout…"
@@ -778,7 +787,7 @@ function CheckoutPanel({
             className="w-full"
             aria-describedby="closed-note"
           >
-            <Lock data-icon="inline-start" /> Checkout opening shortly
+            <IconLock data-icon="inline-start" /> Checkout opening shortly
           </Button>
           <p className="text-center text-[13px] text-ink-3" id="closed-note">
             Checkout isn&rsquo;t switched on yet. Join the list and we&rsquo;ll

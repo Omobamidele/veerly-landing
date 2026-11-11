@@ -9,6 +9,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default: "bg-primary text-primary-foreground shadow-[0_1px_0_rgb(255_255_255/0.18)_inset,0_1px_2px_rgb(13_27_38/0.18)] hover:bg-brand-press",
+        yellow: "bg-yellow text-ink shadow-[0_1px_0_rgb(255_255_255/0.45)_inset,0_1px_2px_rgb(0_43_66/0.18)] hover:bg-[#f0c93a]",
         stage: "bg-white text-ink shadow-[0_1px_2px_rgb(0_20_32/0.25)] hover:bg-tint",
         "stage-ghost": "border-white/25 text-white hover:border-white/50 hover:bg-white/5",
         outline:

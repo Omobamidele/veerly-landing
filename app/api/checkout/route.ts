@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { paymentsEnabled, pricing, site } from "@/lib/config";
 import { currentPhase, enrolAt, formatWhen, paymentOpen } from "@/lib/launch";
 import { initializeTransaction, newReference, priceFor } from "@/lib/paystack";
-import { LEVEL_LABEL, parseLevel, VA_CAREER_PATH } from "@/lib/levels";
+import { LEVEL_LABEL, parseLevel, parsePath, pathLabel } from "@/lib/levels";
 import { chargeCurrencyFor, isCurrency } from "@/lib/pricing";
 import { clientKey, rateLimited } from "@/lib/ratelimit";
 import { markPending, signupForCheckout } from "@/lib/waitlist";
@@ -67,9 +67,19 @@ export async function POST(req: Request) {
       },
       { status: 422 },
     );
+  const careerPath = parsePath(body.careerPath ?? body.path);
+  if (!careerPath)
+    return NextResponse.json(
+      {
+        ok: false,
+        errors: { careerPath: "Choose a career path." },
+        message: "Choose a career path first.",
+      },
+      { status: 422 },
+    );
 
   try {
-    const s = await signupForCheckout(email, name, level);
+    const s = await signupForCheckout(email, name, { level, careerPath });
     if (s.payment.status === "paid")
       return NextResponse.json({ ok: true, url: `/welcome?already=1` });
     const { amount } = priceFor(currency);
@@ -83,7 +93,8 @@ export async function POST(req: Request) {
       metadata: {
         signupId: s.id,
         name: s.name,
-        careerPath: s.profile.careerPath || VA_CAREER_PATH,
+        careerPath,
+        pathLabel: pathLabel(careerPath),
         level,
         levelLabel: LEVEL_LABEL[level],
         product: "veerly-founding-cohort",

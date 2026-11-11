@@ -11,7 +11,7 @@ What happens after you pay:
 
 - You take a short career assessment.
 - You get a plan built around your path: skills to develop, roles to pursue, companies to target and projects to build.
-- You get your Job Hunt OS, Portfolio Builder and Interview Preparation System.
+- You get one Notion workspace for your path and level, with Job Hunt OS, Portfolio Builder and Interview Preparation System inside it.
 - Cohort 1 starts on 1 February 2027 at 9:00 AM WAT.
 
 To be clear about one thing: Veerly helps you get organised and prepared. It doesn't guarantee a job, and we'll never pretend otherwise.

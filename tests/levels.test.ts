@@ -1,40 +1,57 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
+import { careerPaths } from "../lib/options";
 import {
-  LEVEL_CARDS,
-  LEVEL_LABEL,
-  isLevel,
-  levelLabel,
+  LEVELS,
+  LEVELS_BY_PATH,
+  PATH_META,
+  isCareerPath,
+  levelCardsFor,
   parseLevel,
+  parsePath,
+  pathLabel,
+  planSummary,
 } from "../lib/levels";
 import { PRICES } from "../lib/pricing";
 
-test("parseLevel accepts beginner, intermediate, advanced only", () => {
-  assert.equal(parseLevel("beginner"), "beginner");
-  assert.equal(parseLevel(" Intermediate "), "intermediate");
-  assert.equal(parseLevel("ADVANCED"), "advanced");
-  assert.equal(parseLevel("expert"), null);
-  assert.equal(parseLevel(""), null);
-  assert.equal(parseLevel(undefined), null);
-  assert.equal(isLevel("beginner"), true);
-  assert.equal(isLevel("Beginner"), false);
-  assert.equal(levelLabel("advanced"), "Advanced");
+test("every career path has beginner, intermediate and advanced cards", () => {
   assert.deepEqual(
-    LEVEL_CARDS.map((c) => c.id),
-    ["beginner", "intermediate", "advanced"],
+    PATH_META.map((p) => p.id),
+    [...careerPaths],
   );
-  assert.equal(LEVEL_LABEL.beginner, "Beginner");
-});
-
-test("every VA level uses the same founding price", () => {
-  // Price is not per-level; the picker must not invent a new amount.
+  assert.equal(PATH_META.length, 10);
+  for (const path of careerPaths) {
+    const cards = levelCardsFor(path);
+    assert.ok(cards);
+    assert.deepEqual(
+      cards.map((c) => c.id),
+      ["beginner", "intermediate", "advanced"],
+    );
+    for (const card of cards) {
+      assert.ok(card.who.length > 20, path + " " + card.id);
+      assert.ok(card.learn.length >= 4, path + " " + card.id);
+      assert.ok(card.able.length >= 4, path + " " + card.id);
+      assert.match(card.cta, /^Choose /);
+    }
+  }
   assert.equal(PRICES.NGN.amount, 10000);
   assert.equal(PRICES.USD.amount, 7.99);
-  for (const card of LEVEL_CARDS) {
-    assert.equal(typeof card.who, "string");
-    assert.ok(card.who.length > 20);
-    assert.ok(card.learn.length >= 4);
-    assert.ok(card.able.length >= 4);
-    assert.match(card.cta, /^Choose /);
-  }
+  assert.equal(Object.keys(LEVELS_BY_PATH).length, 10);
+});
+
+test("parsePath accepts official names, slugs and short labels", () => {
+  assert.equal(parsePath("va"), "Administration and Virtual Assistance");
+  assert.equal(parsePath("Virtual Assistant"), "Administration and Virtual Assistance");
+  assert.equal(parsePath("GTM and Revenue Operations"), "GTM and Revenue Operations");
+  assert.equal(parsePath("gtm"), "GTM and Revenue Operations");
+  assert.equal(parsePath("design"), "Design and Creative Services");
+  assert.equal(parsePath("not a path"), null);
+  assert.equal(isCareerPath("Project Management"), true);
+  assert.equal(pathLabel("va"), "Virtual Assistant");
+  assert.equal(
+    planSummary("sales", "beginner"),
+    "Sales and Business Development · Beginner",
+  );
+  assert.equal(parseLevel(" Advanced "), "advanced");
+  assert.deepEqual([...LEVELS], ["beginner", "intermediate", "advanced"]);
 });

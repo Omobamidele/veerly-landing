@@ -1,14 +1,28 @@
 "use client";
 
-import { Check } from "lucide-react";
+import { IconCheck } from "@/components/icons/veerly-icons";
 import { Button } from "@/components/ui/button";
-import { LEVEL_CARDS, LEVEL_LABEL, type VaLevel } from "@/lib/levels";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+import {
+  LEVEL_LABEL,
+  PATH_META,
+  levelCardsFor,
+  type CareerPath,
+  type LevelId,
+} from "@/lib/levels";
 import { cn } from "@/lib/utils";
 import { Price } from "./Currency";
 import { useLevel } from "./LevelProvider";
 
-function chooseAndJoin(setLevel: (level: VaLevel) => void, id: VaLevel) {
-  setLevel(id);
+function chooseAndJoin(
+  setPlan: (path: CareerPath, level: LevelId) => void,
+  path: CareerPath,
+  level: LevelId,
+) {
+  setPlan(path, level);
   requestAnimationFrame(() => {
     document
       .getElementById("join-card")
@@ -22,119 +36,180 @@ export default function LevelChoice({
   /** e.g. "1–28 February 2027" */
   cohortWindow: string;
 }) {
-  const { level, setLevel } = useLevel();
+  const { path, pathLabel, level, setPath, setPlan } = useLevel();
+  const cards = path ? levelCardsFor(path) : null;
 
   return (
     <section
       id="levels"
       aria-labelledby="levels-title"
-      className="scroll-mt-24 border-t border-line py-24 sm:py-32"
+      className="scroll-mt-24 bg-navy py-24 text-white sm:py-32"
     >
       <div className="wrap flex flex-col gap-12 sm:gap-14">
         <div className="grid gap-8 lg:grid-cols-12">
-          <h2 id="levels-title" className="h2 lg:col-span-7">
-            Choose your Virtual Assistant level.{" "}
-            <span className="quiet">Each level gets its own workspace.</span>
+          <h2 id="levels-title" className="h2 text-white lg:col-span-7">
+            Choose your path and level.{" "}
+            <span className="text-yellow">Each one gets its own workspace.</span>
           </h2>
-          <div className="flex flex-col gap-3 max-w-[44ch] text-lg leading-relaxed text-ink-2 lg:col-span-4 lg:col-start-9 lg:pt-2">
+          <div className="flex max-w-[44ch] flex-col gap-3 text-lg leading-relaxed text-white/80 lg:col-span-4 lg:col-start-9 lg:pt-2">
             <p>
-              Pick Beginner, Intermediate or Advanced. You only receive the
-              workspace for the level you choose.
+              Every career path has Beginner, Intermediate and Advanced. Pick
+              both, and you only receive the workspace for that combination.
             </p>
-            <p className="text-[15px] text-ink-3">
-              Cohort 1 runs {cohortWindow}. Same one-time price for every
-              level: <Price className="font-medium text-ink-2" />.
+            <p className="text-[15px] text-white/70">
+              Cohort 1 runs {cohortWindow}. Same one-time price for every path
+              and level: <Price className="font-medium text-yellow" />.
             </p>
           </div>
         </div>
 
-        <ul className="grid items-stretch gap-px overflow-hidden rounded-xl border border-line bg-line lg:grid-cols-3">
-          {LEVEL_CARDS.map((card) => {
-            const selected = level === card.id;
-            return (
-              <li
-                key={card.id}
-                className={cn(
-                  "flex flex-col gap-6 bg-white p-6 sm:p-8",
-                  selected && "bg-tint",
-                )}
-              >
-                <div className="flex flex-col gap-2">
-                  <h3 className="font-display text-[28px] leading-none font-bold tracking-[-0.025em] text-ink">
-                    {card.name}
-                  </h3>
-                  <p className="text-[15px] leading-relaxed text-ink-2">
-                    {card.who}
-                  </p>
-                </div>
+        <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <label
+              htmlFor="career-path"
+              className="text-sm font-medium text-white"
+            >
+              Your career path
+            </label>
+            <NativeSelect
+              id="career-path"
+              value={path ?? ""}
+              onChange={(e) => {
+                const next = e.target.value as CareerPath;
+                if (next) setPath(next);
+              }}
+              className="h-12 w-full border-transparent bg-white text-ink shadow-none sm:hidden"
+            >
+              <NativeSelectOption value="">Choose a path</NativeSelectOption>
+              {PATH_META.map((p) => (
+                <NativeSelectOption key={p.id} value={p.id}>
+                  {p.label}
+                </NativeSelectOption>
+              ))}
+            </NativeSelect>
+          </div>
 
-                <div className="flex flex-col gap-2">
-                  <p className="text-[13px] font-medium text-ink-3">
-                    You&rsquo;ll learn
-                  </p>
-                  <ul className="flex flex-col">
-                    {card.learn.map((item) => (
-                      <li
-                        key={item}
-                        className="flex items-start gap-2.5 border-b border-line py-2.5 text-[15px] leading-snug text-ink last:border-b-0"
-                      >
-                        <Check
-                          className="mt-0.5 size-4 shrink-0 text-brand"
-                          strokeWidth={2.25}
-                          aria-hidden="true"
-                        />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="flex flex-col gap-2">
-                  <p className="text-[13px] font-medium text-ink-3">
-                    You&rsquo;ll be able to
-                  </p>
-                  <ul className="flex flex-col">
-                    {card.able.map((item) => (
-                      <li
-                        key={item}
-                        className="flex items-start gap-2.5 border-b border-line py-2.5 text-[15px] leading-snug text-ink last:border-b-0"
-                      >
-                        <Check
-                          className="mt-0.5 size-4 shrink-0 text-brand"
-                          strokeWidth={2.25}
-                          aria-hidden="true"
-                        />
-                        {item}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-auto pt-2">
-                  <Button
+          <ul className="hidden grid-cols-2 gap-2 sm:grid lg:grid-cols-5">
+            {PATH_META.map((p) => {
+              const selected = path === p.id;
+              return (
+                <li key={p.id}>
+                  <button
                     type="button"
-                    size="lg"
-                    variant={selected ? "default" : "outline"}
-                    className="w-full"
                     aria-pressed={selected}
-                    onClick={() => chooseAndJoin(setLevel, card.id)}
-                  >
-                    {selected ? (
-                      <>
-                        <Check data-icon="inline-start" />
-                        {LEVEL_LABEL[card.id]} selected
-                      </>
-                    ) : (
-                      card.cta
+                    onClick={() => setPath(p.id)}
+                    className={cn(
+                      "flex h-full min-h-16 w-full items-center rounded-xl px-3.5 py-3 text-left text-[14px] leading-snug font-semibold tracking-[-0.01em] transition-colors",
+                      selected
+                        ? "bg-yellow text-ink"
+                        : "bg-white/8 text-white hover:bg-white/14",
                     )}
-                  </Button>
-                </div>
-              </li>
-            );
-          })}
-        </ul>
+                  >
+                    {p.label}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </div>
 
-        <p className="-mt-6 text-[13px] text-ink-3">
+        {cards ? (
+          <ul className="grid items-stretch gap-4 lg:grid-cols-3 lg:gap-5">
+            {cards.map((card) => {
+              const selected = level === card.id;
+              return (
+                <li
+                  key={card.id}
+                  className={cn(
+                    "flex flex-col gap-6 rounded-2xl p-6 sm:p-8",
+                    selected ? "bg-yellow text-ink" : "bg-white text-ink",
+                  )}
+                >
+                  <div className="flex flex-col gap-2">
+                    <h3 className="font-display text-[28px] leading-none font-extrabold tracking-[-0.025em]">
+                      {card.name}
+                    </h3>
+                    <p className="text-[15px] leading-relaxed text-ink-2">
+                      For {pathLabel}. {card.who}
+                    </p>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <p className="text-[13px] font-medium text-ink-3">
+                      You&rsquo;ll learn
+                    </p>
+                    <ul className="flex flex-col">
+                      {card.learn.map((item) => (
+                        <li
+                          key={item}
+                          className="flex items-start gap-2.5 border-b border-ink/10 py-2.5 text-[15px] leading-snug last:border-b-0"
+                        >
+                          <IconCheck
+                            className="mt-0.5 size-4 shrink-0 text-navy"
+                            strokeWidth={2.5}
+                            aria-hidden="true"
+                          />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <p className="text-[13px] font-medium text-ink-3">
+                      You&rsquo;ll be able to
+                    </p>
+                    <ul className="flex flex-col">
+                      {card.able.map((item) => (
+                        <li
+                          key={item}
+                          className="flex items-start gap-2.5 border-b border-ink/10 py-2.5 text-[15px] leading-snug last:border-b-0"
+                        >
+                          <IconCheck
+                            className="mt-0.5 size-4 shrink-0 text-navy"
+                            strokeWidth={2.5}
+                            aria-hidden="true"
+                          />
+                          {item}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="mt-auto pt-2">
+                    <Button
+                      type="button"
+                      size="lg"
+                      variant={selected ? "default" : "yellow"}
+                      className="w-full"
+                      aria-pressed={selected}
+                      disabled={!path}
+                      onClick={() =>
+                        path && chooseAndJoin(setPlan, path, card.id)
+                      }
+                    >
+                      {selected ? (
+                        <>
+                          <IconCheck data-icon="inline-start" />
+                          {pathLabel} · {LEVEL_LABEL[card.id]} selected
+                        </>
+                      ) : (
+                        card.cta
+                      )}
+                    </Button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <p className="rounded-2xl bg-white/8 px-6 py-10 text-center text-[15px] text-white/80">
+            Choose a career path above to see Beginner, Intermediate and
+            Advanced.
+          </p>
+        )}
+
+        <p className="-mt-4 text-[13px] text-white/60">
           These describe skills you can show at the end of the cohort. They are
           not a job guarantee.
         </p>
