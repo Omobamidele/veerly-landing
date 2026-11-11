@@ -1,15 +1,16 @@
 /**
  * Countdown target logic. The DATES live in lib/launch.ts (one config for the whole timeline).
- *   prelaunch → null (no countdown). promo / enrol → the next cohort after max(now, promotion start),
- *   then the first Monday of next month at 9:00 AM WAT once the list runs out, so it never sits at zero.
+ *   prelaunch / promo → ENROL_AT (1 Jan 2027, 9:00 AM WAT). The yellow tiles are live now.
+ *   enrol onward → the next cohort after max(now, promotion start), then the first Monday of
+ *   next month at 9:00 AM WAT once the list runs out, so it never sits at zero.
  */
-import { DEFAULT_COHORTS, type Cohort, type Phase } from "./launch";
+import { DEFAULT_COHORTS, enrolAt, type Cohort, type Phase } from "./launch";
 
 export type { Cohort };
 export const COHORTS = DEFAULT_COHORTS;
 
 export type CountdownTarget = {
-  kind: "cohort";
+  kind: "enrolment" | "cohort";
   /** Heading above the tiles. */
   label: string;
   /** Cohort name, when counting to a cohort. */
@@ -43,15 +44,26 @@ const monthName = (ms: number) =>
  */
 export function pickCountdownTarget(opts: {
   now: number;
-  /** Promotion start (countdown start); previews before it count from here. */
+  /** Promotion start; used so an enrol preview before that date still aims at Cohort 1. */
   promoAtMs: number;
+  /** Enrolment / payment opens. Defaults to lib/launch.ts. */
+  enrolAtMs?: number;
   phase: Phase;
   cohorts?: Cohort[];
 }): CountdownTarget | null {
   const { now, promoAtMs, phase } = opts;
-  if (phase === "prelaunch") return null; // no ticking numbers before promotion starts
+  const enrolAtMs = opts.enrolAtMs ?? enrolAt().getTime();
 
-  // After launch (or previewing it): count from whichever is later, so a preview shows the first cohort after launch.
+  // Until enrolment opens, the hero counts down to ENROL_AT — including before 1 Dec.
+  if (phase === "prelaunch" || phase === "promo") {
+    return {
+      kind: "enrolment",
+      label: "Founding enrolment",
+      atMs: enrolAtMs,
+    };
+  }
+
+  // Enrolment is open: count from whichever is later, so a preview shows the first cohort after launch.
   const from = Math.max(now, promoAtMs);
   const next = (opts.cohorts ?? COHORTS)
     .map((c) => ({ ...c, ms: new Date(c.startsAt).getTime() }))

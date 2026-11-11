@@ -1,14 +1,14 @@
 /**
  * VEERLY TIMELINE — every launch and cohort date lives here (all 9:00 AM WAT, Africa/Lagos, UTC+01:00, no DST).
  *
- *   Before PROMO_AT ............ "prelaunch": no countdown, calm "Enrolment opens …" panel, waitlist only.
- *   PROMO_AT  (1 Dec 2026) ..... "promo":     the yellow countdown appears, counting to Cohort 1. Still waitlist only.
- *   ENROL_AT  (1 Jan 2027) ..... "enrol":     enrolment + Paystack checkout open. Countdown keeps counting to the next cohort.
+ *   Before PROMO_AT ............ "prelaunch": yellow countdown to ENROL_AT (1 Jan 2027). Waitlist only.
+ *   PROMO_AT  (1 Dec 2026) ..... "promo":     the same countdown to ENROL_AT. Still waitlist only.
+ *   ENROL_AT  (1 Jan 2027) ..... "enrol":     enrolment + Paystack checkout open. Countdown switches to the next cohort.
  *   Cohort 1  (1 Feb 2027) ..... confirmed. Then the countdown rolls to Cohort 2, 3, … and finally the
  *                                first-Monday-of-next-month fallback (lib/cohorts.ts), so it never runs out.
  *
  * Env overrides (ISO strings with offset, e.g. 2026-12-01T09:00:00+01:00):
- *   NEXT_PUBLIC_LAUNCH_AT       promotion / countdown start   (PROMO_AT)
+ *   NEXT_PUBLIC_LAUNCH_AT       promotion start               (PROMO_AT)
  *   NEXT_PUBLIC_ENROL_AT        enrolment / payment opens     (ENROL_AT)
  *   NEXT_PUBLIC_COHORT_START_AT Cohort 1 start
  *   NEXT_PUBLIC_LAUNCH_STATE    force a phase: prelaunch | promo | enrol (legacy "launched" = enrol)

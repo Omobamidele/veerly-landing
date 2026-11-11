@@ -1,4 +1,4 @@
-# Veerly landing — design spec (v5–v8)
+# Veerly landing — design spec (v5–v8.1)
 
 Mode: **Persuade** (a launch page: the visitor should understand the offer in one viewport, feel the date approaching, and leave a WhatsApp number).
 Direction (pinned by Mo's brief, no concept roll): **"Blue stage, yellow signal."** Lemon Squeezy's true blue (`#0075AD`, their `--blue-700`) as the stage, at product-site precision. One saturated moment on the whole page: her yellow countdown.
@@ -102,7 +102,7 @@ Selection white on ink, caret brand blue, focus ring 2px brand blue with 2px off
 - **Never zero:** the board never shows zeros or a static "open" panel. The yellow `#FFD84D` tiles stay on the navy panel. `?preview=launched` shows the next-cohort countdown.
 - **Placeholder dates:** the listed dates (Cohort 1 Mon 4 Jan 2027, Cohort 2 Mon 1 Feb 2027, Cohort 3 Mon 1 Mar 2027, all 9:00 WAT) are placeholders until Mo confirms them.
 
-## v6.1: no countdown before launch (Mo's decision; she starts promoting on 1 Dec 2026)
+## v6.1: no countdown before launch (superseded by v8.1 — tiles now count to enrolment from today)
 - **Before `NEXT_PUBLIC_LAUNCH_AT`** (1 Dec 2026, 9:00 AM WAT): no timer anywhere. `pickCountdownTarget` returns `null` in this period.
   - **Hero:** the same navy panel holds a calm, static message: "Founding enrolment / Opens 1 December 2026 / Join the waitlist and we'll message you on WhatsApp when it opens. Nothing to pay until then." The date line and "first cohort January 2027" sit below it.
   - **Pricing band:** a single quiet line: "Founding enrolment opens 1 December 2026, 9:00 AM WAT. Nothing to pay until then."
@@ -118,6 +118,17 @@ Selection white on ink, caret brand blue, focus ring 2px brand blue with 2px off
 
 - **After Cohort 1:** the countdown rolls to Cohort 2 on 1 Mar 2027 and Cohort 3 on 5 Apr 2027, both placeholders. After that it falls back to the first Monday of next month.
 - **Previews:** `?preview=prelaunch|promo|enrol`. `launched` still works and means enrol.
+
+## v8.1: yellow enrolment countdown is live now (Mo, 11 Nov 2026)
+The v6.1 "no tiles before 1 Dec" panel is retired. Mo wants the yellow `#FFD84D` tiles on the navy hero board today, counting down to founding enrolment.
+
+| Phase | When | Hero board | Pricing strip | Checkout |
+|---|---|---|---|---|
+| prelaunch | now → 1 Dec 2026 | "Founding enrolment / Opens 1 January 2027", yellow tiles to **1 January 2027, 9:00 AM WAT**, waitlist nudge, "1 January 2027, 9:00 AM WAT · Cohort 1 starts 1 February 2027" | Strip countdown to enrolment + "Enrolment opens 1 January 2027. Nothing to pay until then." | Waitlist only; `/api/checkout` → 409 `enrolment_not_open` |
+| promo | 1 Dec 2026 | The same enrolment board and tiles | Same strip | Waitlist only; 409 |
+| enrol | 1 Jan 2027 | Yellow tiles count to the **next cohort**; footer "· enrolment open, ₦10,000 one-time" | Strip countdown to the next cohort | Paystack checkout live |
+
+Copy on the prelaunch/promo hero board is Mo's wording exactly. Payment still opens on 1 January; only the timer is early.
 
 ## v6.3 — Cohort coach (`/coach`)
 

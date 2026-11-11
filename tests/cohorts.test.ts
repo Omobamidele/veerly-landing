@@ -12,8 +12,8 @@ import {
   promoAt,
 } from "../lib/launch";
 
-const P = Date.parse("2026-12-01T09:00:00+01:00"); // promotion + countdown start
-const E = Date.parse("2027-01-01T09:00:00+01:00"); // enrolment / payment opens
+const P = Date.parse("2026-12-01T09:00:00+01:00"); // promotion start (still waitlist only)
+const E = Date.parse("2027-01-01T09:00:00+01:00"); // enrolment / payment opens; countdown target until then
 const C1 = Date.parse("2027-02-01T09:00:00+01:00"); // Cohort 1 (confirmed)
 
 test("default timeline: 1 Dec promo, 1 Jan enrolment, Cohort 1 1 Feb (confirmed), then 1 Mar and 5 Apr", () => {
@@ -64,66 +64,93 @@ test("previews and env overrides", () => {
   }
 });
 
-test("prelaunch: no countdown (null = hidden)", () => {
-  assert.equal(
-    pickCountdownTarget({ now: P - 1, promoAtMs: P, phase: "prelaunch" }),
-    null,
-  );
-});
-
-test("promo and enrol: count to Cohort 1 (1 Feb 2027), then roll on", () => {
+test("prelaunch and promo: count to enrolment (1 Jan 2027), not hidden", () => {
   for (const [now, phase] of [
+    [Date.parse("2026-11-11T05:00:00+01:00"), "prelaunch"],
+    [P - 1, "prelaunch"],
     [P, "promo"],
     [E - 1, "promo"],
-    [E, "enrol"],
   ] as const) {
-    const t = pickCountdownTarget({ now, promoAtMs: P, phase });
+    const t = pickCountdownTarget({ now, promoAtMs: P, enrolAtMs: E, phase });
     assert.ok(t);
     assert.deepEqual(
-      [t.name, t.atMs, t.label],
-      ["Cohort 1", C1, "Next cohort starts in"],
+      [t.kind, t.atMs, t.label, t.name],
+      ["enrolment", E, "Founding enrolment", undefined],
     );
+    assert.ok(t.atMs > now);
   }
+});
+
+test("enrol: count to Cohort 1 (1 Feb 2027), then roll on", () => {
+  const t = pickCountdownTarget({
+    now: E,
+    promoAtMs: P,
+    enrolAtMs: E,
+    phase: "enrol",
+  });
+  assert.ok(t);
+  assert.deepEqual(
+    [t.kind, t.name, t.atMs, t.label],
+    ["cohort", "Cohort 1", C1, "Next cohort starts in"],
+  );
   assert.equal(
-    pickCountdownTarget({ now: C1, promoAtMs: P, phase: "enrol" })?.name,
+    pickCountdownTarget({
+      now: C1,
+      promoAtMs: P,
+      enrolAtMs: E,
+      phase: "enrol",
+    })?.name,
     "Cohort 2",
   );
   assert.equal(
     pickCountdownTarget({
       now: Date.parse("2027-03-01T09:00:00+01:00"),
       promoAtMs: P,
+      enrolAtMs: E,
       phase: "enrol",
     })?.atMs,
     Date.parse("2027-04-05T09:00:00+01:00"),
   );
 });
 
-test("?preview=promo / enrol before 1 Dec still shows the Cohort 1 countdown", () => {
+test("?preview=promo before 1 Dec still counts to enrolment; enrol preview counts to Cohort 1", () => {
   const now = Date.parse("2026-11-10T13:00:00+01:00");
+  const promo = pickCountdownTarget({
+    now,
+    promoAtMs: P,
+    enrolAtMs: E,
+    phase: "promo",
+  });
+  assert.equal(promo?.kind, "enrolment");
+  assert.equal(promo?.atMs, E);
   assert.equal(
-    pickCountdownTarget({ now, promoAtMs: P, phase: "promo" })?.name,
-    "Cohort 1",
-  );
-  assert.equal(
-    pickCountdownTarget({ now, promoAtMs: P, phase: "enrol" })?.name,
+    pickCountdownTarget({ now, promoAtMs: P, enrolAtMs: E, phase: "enrol" })
+      ?.name,
     "Cohort 1",
   );
 });
 
-test("list exhausted: first Monday of next month 9:00 WAT; never zero from promo onward", () => {
+test("list exhausted: first Monday of next month 9:00 WAT; never zero, including before enrolment", () => {
   const t = pickCountdownTarget({
     now: Date.parse("2027-04-20T12:00:00+01:00"),
     promoAtMs: P,
+    enrolAtMs: E,
     phase: "enrol",
   });
   assert.ok(t);
   assert.equal(t.fallback, true);
   assert.equal(new Date(t.atMs).toISOString(), "2027-05-03T08:00:00.000Z"); // Mon 3 May 2027
   assert.equal(t.name, "May 2027 cohort");
-  for (let ms = P; ms < P + 500 * 86_400_000; ms += 3 * 3_600_000 + 17_000) {
+  const start = Date.parse("2026-11-01T09:00:00+01:00");
+  for (
+    let ms = start;
+    ms < start + 500 * 86_400_000;
+    ms += 3 * 3_600_000 + 17_000
+  ) {
     const x = pickCountdownTarget({
       now: ms,
       promoAtMs: P,
+      enrolAtMs: E,
       phase: phaseAt(ms, P, E),
     });
     assert.ok(x && x.atMs > ms);

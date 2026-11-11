@@ -6,7 +6,7 @@ import { phaseAt, type Cohort, type Phase } from "@/lib/launch";
 
 type LaunchState = {
   now: number | null;
-  /** prelaunch (no countdown) → promo (countdown, waitlist only) → enrol (checkout open). */
+  /** prelaunch / promo (countdown to enrolment, waitlist only) → enrol (checkout open, countdown to next cohort). */
   phase: Phase;
   /** True once enrolment/payment is open (the enrol phase). */
   launched: boolean;
@@ -16,7 +16,7 @@ type LaunchState = {
   label: string;
   /** Enrolment opening, short, e.g. "1 Jan". */
   shortLabel: string;
-  /** Next cohort the countdown counts to; null before promotion starts (no countdown shown). */
+  /** What the countdown counts to: enrolment until doors open, then the next cohort. */
   target: CountdownTarget | null;
 };
 const Ctx = createContext<LaunchState | null>(null);
@@ -70,6 +70,7 @@ export function LaunchProvider({
         target: pickCountdownTarget({
           now: now ?? serverNow ?? promoAtMs,
           promoAtMs,
+          enrolAtMs,
           phase,
           cohorts,
         }),

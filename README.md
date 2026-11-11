@@ -4,7 +4,7 @@ Next.js 15 (App Router) + TypeScript. A calm, single-page site with a launch cou
 (email and WhatsApp opt-in), Paystack checkout, a post-payment welcome page, Brevo email sync, a WhatsApp
 launch-notification script, and a small admin view. **Nothing is sent or charged until you add your own keys.**
 
-**Design (v5–v8):** "Blue stage, yellow signal" (Lemon Squeezy true blue #0075AD, navy countdown panel). v7 adds real screenshots of the Virtual Assistant Career OS. v8 adds a Virtual Assistant level picker (Beginner, Intermediate, Advanced) before waitlist or checkout — see `DESIGN.md` for the spec, references and tokens. Built with Tailwind CSS v4,
+**Design (v5–v8.1):** "Blue stage, yellow signal" (Lemon Squeezy true blue #0075AD, navy countdown panel). v7 adds real screenshots of the Virtual Assistant Career OS. v8 adds a Virtual Assistant level picker (Beginner, Intermediate, Advanced) before waitlist or checkout. v8.1 puts the yellow countdown tiles on the hero from today, counting to enrolment on 1 January 2027 — see `DESIGN.md` for the spec, references and tokens. Built with Tailwind CSS v4,
 shadcn/ui (Radix) components in `components/ui/`, and restrained GSAP + ScrollTrigger motion (`components/Motion.tsx`, off for
 `prefers-reduced-motion`). Fonts: Bricolage Grotesque (display) and Geist (body). Previous designs: git tags `v1`, `v2`
 (v1 also in `_v1-archive/`).
@@ -19,7 +19,7 @@ npm run build && npm run start     # production mode on :3210
 
 Preview states:
 
-- Previews: `/?preview=prelaunch` (before 1 Dec: calm panel, no countdown), `/?preview=promo` (from 1 Dec: countdown to Cohort 1, waitlist only), `/?preview=enrol` (from 1 Jan: checkout open; `/?preview=launched` is the same).
+- Previews: `/?preview=prelaunch` and `/?preview=promo` show the founding-enrolment panel with yellow tiles counting to 1 January 2027 (waitlist only). `/?preview=enrol` (from 1 Jan: checkout open; `/?preview=launched` is the same) counts to the next cohort.
 - `/welcome?preview=paid` shows the post-payment onboarding page. Add `&level=beginner` (or `intermediate` / `advanced`) to preview the plan on that page.
 - You can force a phase site-wide with `NEXT_PUBLIC_LAUNCH_STATE=prelaunch|promo|enrol`.
 
@@ -29,9 +29,9 @@ consent rules, VA levels, phone normalisation, Brevo sync with mocked fetch, che
 ## How the launch works
 
 - **Timeline (`lib/launch.ts`, all 9:00 AM WAT):**
-  - Before 1 Dec 2026: no countdown, waitlist only.
-  - 1 Dec 2026 (`NEXT_PUBLIC_LAUNCH_AT`): promotion starts and the countdown to Cohort 1 appears. It's still waitlist only.
-  - 1 Jan 2027 (`NEXT_PUBLIC_ENROL_AT`): enrolment and Paystack checkout open. Before this, `/api/checkout` refuses with `enrolment_not_open`.
+  - Before 1 Dec 2026 and through 31 Dec: yellow countdown tiles count to founding enrolment on 1 January 2027, 9:00 AM WAT. Waitlist only.
+  - 1 Dec 2026 (`NEXT_PUBLIC_LAUNCH_AT`): promotion starts. The countdown still aims at enrolment. It's still waitlist only.
+  - 1 Jan 2027 (`NEXT_PUBLIC_ENROL_AT`): enrolment and Paystack checkout open. The countdown switches to the next cohort. Before this, `/api/checkout` refuses with `enrolment_not_open`.
   - 1 Feb 2027: Cohort 1 starts (confirmed; `NEXT_PUBLIC_COHORT_START_AT` overrides it). Cohort 2 (1 Mar 2027) and Cohort 3 (5 Apr 2027) are placeholders, followed by the first-Monday fallback.
   It renders on the client to avoid hydration mismatches, keeps a fixed width so the layout doesn't shift, and only
   announces to screen readers once a minute.
@@ -118,7 +118,7 @@ That rises to 2,000 after verification or a scaling path, then 10,000 and 100,00
 
 - **Prices:** edit `lib/pricing.ts`. It holds one hand-set table for NGN, USD, GBP, EUR, CAD, GHS, KES, ZAR, INR and AUD. There is no live FX. Visitors can pick a currency, and the choice is remembered in their browser.
 - **Checkout currency:** NGN when NGN is picked. Any other currency charges USD only if `PAYSTACK_ENABLE_USD=true`, otherwise NGN. The site shows a short note whenever the shown currency isn't the charged one.
-- **Dates:** edit `lib/launch.ts`, the one timeline config. The countdown logic is in `lib/cohorts.ts`. Before 1 Dec there is a calm "Enrolment opens 1 January 2027" panel. From 1 Dec it counts to the next cohort. If the list runs out, it counts to the first Monday of next month at 9:00 WAT, so it never stops.
+- **Dates:** edit `lib/launch.ts`, the one timeline config. The countdown logic is in `lib/cohorts.ts`. Until enrolment opens on 1 January 2027 the yellow tiles count down to that date. From then on they count to the next cohort. If the list runs out, they count to the first Monday of next month at 9:00 WAT, so they never stop.
 
 ## Payments: Paystack
 
