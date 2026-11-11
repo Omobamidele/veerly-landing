@@ -5,6 +5,7 @@ import {
   allItems,
   coachCohort,
   coachNote,
+  ensureStarted,
   parseSaved,
   parts,
   progress,
@@ -65,9 +66,9 @@ test("timeline: weeks 1-4 from elapsed time, then closed at the end", () => {
   );
 });
 
-test("late starters share the cohort finish line; personal windows run from the start press", () => {
+test("late starters share the cohort finish line; personal windows run from first open", () => {
   const late = START + 10 * DAY;
-  assert.equal(timeline(c1, late, late).windowStartMs, late); // later of start press and cohort start
+  assert.equal(timeline(c1, late, late).windowStartMs, late); // later of first open and cohort start
   const personal: CoachCohort = { ...c1, alignToCohortStart: false };
   const t = timeline(personal, START - 3 * DAY, START - 3 * DAY);
   assert.equal(t.status, "active");
@@ -144,4 +145,41 @@ test("saved state parsing and countdown parts", () => {
     seconds: 1,
   });
   assert.deepEqual(parts(-5), { days: 0, hours: 0, minutes: 0, seconds: 0 });
+});
+
+test("auto-start: first open starts the clock at now; a saved start time is kept", () => {
+  const now = START - 20 * DAY;
+  const fresh = ensureStarted(parseSaved(null), now);
+  assert.equal(fresh.isNew, true);
+  assert.deepEqual(fresh.state, { startedAt: now, done: [] });
+  const broken = ensureStarted(parseSaved("{oops"), now);
+  assert.equal(broken.isNew, true);
+  const kept = ensureStarted(
+    parseSaved(JSON.stringify({ startedAt: now - DAY, done: ["jh-setup"] })),
+    now,
+  );
+  assert.equal(kept.isNew, false);
+  assert.deepEqual(kept.state, { startedAt: now - DAY, done: ["jh-setup"] });
+});
+
+test("single countdown: counts to day one, then to the window end, never sits at zero while running", () => {
+  const opened = START - 20 * DAY;
+  const before = timeline(c1, opened, opened);
+  assert.equal(before.countdownTo, "start");
+  assert.equal(before.countdownMs, 20 * DAY);
+  assert.equal(timeline(c1, opened, START - 1).countdownMs, 1);
+  const dayOne = timeline(c1, opened, START);
+  assert.equal(dayOne.status, "active");
+  assert.equal(dayOne.countdownTo, "end");
+  assert.equal(dayOne.countdownMs, 28 * DAY);
+  for (let ms = opened; ms < START + 28 * DAY; ms += 37 * 3_600_000) {
+    assert.ok(timeline(c1, opened, ms).countdownMs > 0, `countdown positive at ${ms}`);
+  }
+  assert.equal(timeline(c1, opened, START + 28 * DAY).countdownTo, null);
+});
+
+test("every group has a short tab label", () => {
+  for (const g of c1.groups) {
+    assert.ok(g.short.length > 0 && g.short.length <= 14, g.short);
+  }
 });

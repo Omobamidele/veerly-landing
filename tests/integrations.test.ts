@@ -23,6 +23,7 @@ test("brevo sink: syncs consented contact with attributes and lists (mocked fetc
         whatsappCountry: "NG",
         emailConsent: true,
         whatsappConsent: true,
+        level: "beginner",
       }).data,
     );
     assert.equal(calls.length, 1);
@@ -57,7 +58,7 @@ test("checkout: 409 before launch, 503 'payments open at launch' without Paystac
   const mk = () =>
     new Request("http://localhost/api/checkout", {
       method: "POST",
-      body: JSON.stringify({ email: "a@example.com" }),
+      body: JSON.stringify({ email: "a@example.com", level: "beginner" }),
       headers: { "x-forwarded-for": `t${Math.random()}` },
     });
   for (const state of ["prelaunch", "promo"]) {
@@ -88,4 +89,23 @@ test("whatsapp payload uses an approved template with the first name", async () 
   assert.deepEqual(p.template.components[0].parameters, [
     { type: "text", text: "Ada" },
   ]);
+});
+
+test("checkout: 422 when no level is chosen", async () => {
+  freshStore();
+  process.env.NEXT_PUBLIC_LAUNCH_STATE = "enrol";
+  process.env.PAYSTACK_SECRET_KEY = "sk_test_mock";
+  const { POST } = await import("../app/api/checkout/route");
+  const res = await POST(
+    new Request("http://localhost/api/checkout", {
+      method: "POST",
+      body: JSON.stringify({ email: "a@example.com" }),
+      headers: { "x-forwarded-for": `t${Math.random()}` },
+    }),
+  );
+  assert.equal(res.status, 422);
+  const j = await res.json();
+  assert.equal(j.errors.level, "Choose Beginner, Intermediate or Advanced.");
+  delete process.env.NEXT_PUBLIC_LAUNCH_STATE;
+  delete process.env.PAYSTACK_SECRET_KEY;
 });

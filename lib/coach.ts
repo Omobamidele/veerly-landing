@@ -2,8 +2,9 @@
  * VEERLY COHORT COACH — config + pure logic for /coach (embedded in Notion pages).
  *
  * Cohort by cohort, not task by task: each cohort has ONE set of expectations shown together, grouped by
- * the three systems plus the cohort rhythm. The participant confirms once, then a single countdown runs to
- * the end of their cohort window. Checking items off is free-form (no gating).
+ * the three systems plus the cohort rhythm. The cohort clock starts automatically the first time the participant
+ * opens the coach (saved in localStorage); a single countdown then runs to day one, and from day one to the end
+ * of their cohort window. Checking items off is free-form (no gating).
  *
  * Edit COACH_COHORTS to change names, lengths, expectations, weekly focus or coach notes.
  * Cohort start dates come from lib/launch.ts so the site and the coach always agree.
@@ -15,6 +16,8 @@ export type Expectation = { id: string; text: string };
 export type ExpectationGroup = {
   id: string;
   title: string;
+  /** Short label for the compact embed's group tabs. */
+  short: string;
   items: Expectation[];
 };
 export type WeekFocus = { title: string; focus: string };
@@ -26,7 +29,7 @@ export type CoachCohort = {
   startsAt: string;
   weeks: number;
   /**
-   * true: the window runs from the later of "when you pressed start" and the cohort start date, so everyone in the
+   * true: the window runs from the later of "when you first opened the coach" and the cohort start date, so everyone in the
    * cohort shares the same finish line. false: a personal window from the moment you start.
    */
   alignToCohortStart: boolean;
@@ -44,6 +47,7 @@ const WEEK = 7 * DAY;
 const FOUNDING_GROUPS: ExpectationGroup[] = [
   {
     id: "job-hunt-os",
+    short: "Job hunt",
     title: "Job Hunt OS",
     items: [
       {
@@ -63,6 +67,7 @@ const FOUNDING_GROUPS: ExpectationGroup[] = [
   },
   {
     id: "portfolio-builder",
+    short: "Portfolio",
     title: "Portfolio Builder",
     items: [
       { id: "pb-case-1", text: "Finish portfolio case study 1" },
@@ -72,6 +77,7 @@ const FOUNDING_GROUPS: ExpectationGroup[] = [
   },
   {
     id: "interview-prep",
+    short: "Interviews",
     title: "Interview Preparation System",
     items: [
       { id: "ip-intro", text: "Write and rehearse your 60-second intro" },
@@ -84,6 +90,7 @@ const FOUNDING_GROUPS: ExpectationGroup[] = [
   },
   {
     id: "rhythm",
+    short: "Rhythm",
     title: "Cohort rhythm",
     items: [
       {
@@ -151,7 +158,7 @@ export const storageKey = (cohortId: string) => `veerly.coach.${cohortId}`;
 
 export type SavedCoach = { startedAt: number; done: string[] };
 
-/** Parse whatever is in localStorage; anything malformed counts as "not started". */
+/** Parse whatever is in localStorage; anything malformed counts as "not started" (and is restarted on open). */
 export function parseSaved(raw: string | null | undefined): SavedCoach | null {
   if (!raw) return null;
   try {
@@ -167,6 +174,18 @@ export function parseSaved(raw: string | null | undefined): SavedCoach | null {
   }
 }
 
+/**
+ * Auto-start: the clock starts the first time the coach is opened. A valid saved state is kept as is (so the
+ * start time persists across visits); anything missing or malformed starts a fresh clock at `now`.
+ */
+export function ensureStarted(
+  saved: SavedCoach | null,
+  now: number,
+): { state: SavedCoach; isNew: boolean } {
+  if (saved) return { state: saved, isNew: false };
+  return { state: { startedAt: now, done: [] }, isNew: true };
+}
+
 export const allItems = (c: CoachCohort) => c.groups.flatMap((g) => g.items);
 
 export type CoachTimeline = {
@@ -180,6 +199,9 @@ export type CoachTimeline = {
   focus: WeekFocus;
   /** Share of the window elapsed, 0..1. */
   elapsed: number;
+  /** What the single countdown counts to: day one while "before", the window end while "active". */
+  countdownTo: "start" | "end" | null;
+  countdownMs: number;
 };
 
 export function timeline(
@@ -201,6 +223,8 @@ export function timeline(
       week: 0,
       focus: c.setupFocus,
       elapsed: 0,
+      countdownTo: "start",
+      countdownMs: windowStartMs - now,
     };
   }
   if (now >= endMs) {
@@ -212,6 +236,8 @@ export function timeline(
       week: c.weeks,
       focus: c.weeklyFocus[c.weeklyFocus.length - 1],
       elapsed: 1,
+      countdownTo: null,
+      countdownMs: 0,
     };
   }
   const week = Math.min(c.weeks, Math.floor((now - windowStartMs) / WEEK) + 1);
@@ -223,6 +249,8 @@ export function timeline(
     week,
     focus: c.weeklyFocus[Math.min(week, c.weeklyFocus.length) - 1],
     elapsed: (now - windowStartMs) / (endMs - windowStartMs),
+    countdownTo: "end",
+    countdownMs: endMs - now,
   };
 }
 

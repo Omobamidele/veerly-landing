@@ -1,3 +1,5 @@
+import type { VaLevel } from "./levels";
+
 export type Consent = { granted: boolean; at: string | null; textVersion: string; text: string };
 
 export type Payment = {
@@ -15,6 +17,8 @@ export type Profile = {
   profession?: string;
   careerStage?: string;
   careerPath?: string;
+  /** Virtual Assistant level chosen on the landing page. */
+  level?: VaLevel;
   linkedin?: string;
   completedAt?: string;
 };

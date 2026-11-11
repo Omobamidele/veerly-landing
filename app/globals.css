@@ -429,3 +429,23 @@ html[data-motion="on"] [data-tile] {
     padding: 1.5rem;
   }
 }
+
+/* /coach (Notion embed): fixed-height card with no internal scrollbar on desktop-width embeds; scoped to the
+   coach route so the marketing pages are unaffected. Narrow (phone) embeds keep normal scrolling. */
+html:has(main.coach),
+html:has(main.coach) body {
+  background: #fff;
+}
+@media (min-width: 640px) {
+  html:has(main.coach),
+  html:has(main.coach) body {
+    height: 100%;
+    overflow: hidden;
+  }
+  .coach .countdown-panel {
+    padding: 1.125rem 1.25rem;
+  }
+}
+.coach .countdown-panel {
+  box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.08);
+}

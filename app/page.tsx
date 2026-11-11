@@ -1,6 +1,8 @@
 import { ArrowDown, Check } from "lucide-react";
 import Countdown from "@/components/Countdown";
 import JoinHeading from "@/components/JoinHeading";
+import LevelChoice from "@/components/LevelChoice";
+import { LevelProvider } from "@/components/LevelProvider";
 import { LaunchProvider } from "@/components/LaunchProvider";
 import LaunchCta, { NavCta } from "@/components/LaunchCta";
 import Motion from "@/components/Motion";
@@ -174,6 +176,7 @@ export default async function Home({
   const shortLabel = formatShort(enrol);
   const c1 = cohortOne();
   const c1Day = formatDay(new Date(c1.startsAt));
+  const c1Window = "1–28 February 2027";
   const payments = paymentsEnabled();
   const usdEnabled = pricing.usdEnabled;
   const country = (await headers()).get("x-vercel-ip-country");
@@ -194,8 +197,8 @@ export default async function Home({
     ],
     [
       `From ${shortLabel}`,
-      "Pay once, then take your assessment",
-      `One payment through Paystack (${ngn} in Nigeria, ${usd} elsewhere), then a short career assessment.`,
+      "Choose your level and pay once",
+      `Pick Beginner, Intermediate or Advanced, then one payment through Paystack (${ngn} in Nigeria, ${usd} elsewhere). You get the workspace for the level you choose, then a short career assessment.`,
     ],
     [
       formatWhen(new Date(c1.startsAt)),
@@ -221,7 +224,11 @@ export default async function Home({
     ],
     [
       "How are the systems delivered?",
-      "Your three systems are delivered in Notion, which has a free plan. They're set up for you, so you mainly fill things in and tick things off. You'll get access instructions right after payment.",
+      "Your three systems are delivered in Notion, which has a free plan. They're set up for you, so you mainly fill things in and tick things off. For the Virtual Assistant path, you get the workspace for the level you chose — Beginner, Intermediate or Advanced — not all three. You'll get access instructions right after payment.",
+    ],
+    [
+      "What's the difference between Beginner, Intermediate and Advanced?",
+      "Beginner starts from zero with inbox, calendar and everyday admin. Intermediate is for people who already know the basics and want to run client systems. Advanced is for people who already work with clients and want to specialise, automate and lead. Each level has its own workspace, and you only receive the one you choose. The price is the same for every level.",
     ],
     [
       "When does the cohort start?",
@@ -257,6 +264,7 @@ export default async function Home({
         forced={forced}
         serverNow={now}
       >
+        <LevelProvider>
         <a className="skip" href="#main">
           Skip to content
         </a>
@@ -592,6 +600,8 @@ export default async function Home({
 
             <Workspace />
 
+            <LevelChoice cohortWindow={c1Window} />
+
             {/* ───── Join ───── */}
             <section
               id="join"
@@ -643,6 +653,7 @@ export default async function Home({
                   <SignupCard
                     paymentsEnabled={payments}
                     whatsappChannelUrl={site.whatsappChannelUrl || undefined}
+                    cohortWindow={c1Window}
                   />
                 </div>
               </div>
@@ -738,6 +749,7 @@ export default async function Home({
           </main>
         </Motion>
         <Footer />
+        </LevelProvider>
       </LaunchProvider>
     </CurrencyProvider>
   );

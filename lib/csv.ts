@@ -15,6 +15,7 @@ const cols: [string, (s: Signup) => unknown][] = [
   ["profession", (s) => s.profile.profession],
   ["career_stage", (s) => s.profile.careerStage],
   ["career_path", (s) => s.profile.careerPath],
+  ["level", (s) => s.profile.level || ""],
   ["linkedin", (s) => s.profile.linkedin],
   ["payment_status", (s) => s.payment.status],
   ["payment_reference", (s) => s.payment.reference],

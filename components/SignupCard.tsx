@@ -29,11 +29,13 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { Spinner } from "@/components/ui/spinner";
 import { consentText } from "@/lib/consent";
+import { VA_PATH_LABEL } from "@/lib/levels";
 import { careerPaths, careerStages } from "@/lib/options";
 import { countryOptions, toE164 } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 import { CheckoutNote, CurrencySelect, useCurrency } from "./Currency";
 import { useLaunch } from "./LaunchProvider";
+import { useLevel } from "./LevelProvider";
 
 type Errors = Record<string, string>;
 type Step = "join" | "profile" | "done";
@@ -73,6 +75,7 @@ function Alert({ msg }: { msg: string }) {
 export default function SignupCard(props: {
   paymentsEnabled: boolean;
   whatsappChannelUrl?: string;
+  cohortWindow: string;
 }) {
   const { launched } = useLaunch();
   const [mode, setMode] = useState<"auto" | "waitlist">("auto");
@@ -80,14 +83,46 @@ export default function SignupCard(props: {
   return (
     <div
       id="join-card"
-      className="relative rounded-2xl border border-line bg-white p-6 shadow-[0_1px_2px_rgb(13_27_38/0.04),0_24px_48px_-32px_rgb(13_27_38/0.25)] sm:p-8"
+      className="relative scroll-mt-24 rounded-2xl border border-line bg-white p-6 shadow-[0_1px_2px_rgb(13_27_38/0.04),0_24px_48px_-32px_rgb(13_27_38/0.25)] sm:p-8"
     >
       {showCheckout ? (
         <CheckoutPanel {...props} onWaitlist={() => setMode("waitlist")} />
       ) : (
-        <WaitlistFlow whatsappChannelUrl={props.whatsappChannelUrl} />
+        <WaitlistFlow
+          whatsappChannelUrl={props.whatsappChannelUrl}
+          cohortWindow={props.cohortWindow}
+        />
       )}
     </div>
+  );
+}
+
+function PlanLine() {
+  const { level, label } = useLevel();
+  if (!level || !label) {
+    return (
+      <p className="text-sm text-ink-2" data-plan-line="missing">
+        <a
+          href="#levels"
+          className="font-medium text-brand underline-offset-4 hover:underline"
+        >
+          Choose your level
+        </a>{" "}
+        first. Each level gets its own workspace.
+      </p>
+    );
+  }
+  return (
+    <p className="text-sm text-ink-2" data-plan-line={level}>
+      Your plan: {VA_PATH_LABEL} · {label}. You&rsquo;ll get the {label}{" "}
+      workspace only.{" "}
+      <a
+        href="#levels"
+        className="font-medium text-brand underline-offset-4 hover:underline"
+      >
+        Change
+      </a>
+    </p>
   );
 }
 
@@ -122,8 +157,14 @@ function CardHead({
 }
 
 /* ---------------- Waitlist: step 1 → step 2 → done ---------------- */
-function WaitlistFlow({ whatsappChannelUrl }: { whatsappChannelUrl?: string }) {
+function WaitlistFlow({
+  whatsappChannelUrl,
+}: {
+  whatsappChannelUrl?: string;
+  cohortWindow: string;
+}) {
   const { shortLabel, launched } = useLaunch();
+  const { level, label: levelName } = useLevel();
   const countries = useMemo(() => countryOptions(), []);
   const [step, setStep] = useState<Step>("join");
   const [busy, setBusy] = useState(false);
@@ -162,9 +203,17 @@ function WaitlistFlow({ whatsappChannelUrl }: { whatsappChannelUrl?: string }) {
     if (v.emailConsent !== "on" && !wantsWa)
       e.consent =
         "Choose at least one way for us to tell you when enrolment opens.";
+    if (!level) e.level = "Choose Beginner, Intermediate or Advanced.";
     setErrors(e);
     if (Object.keys(e).length) {
       setMessage("");
+      if (e.level && Object.keys(e)[0] === "level") {
+        document.getElementById("levels")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+        return;
+      }
       const first = Object.keys(e)[0];
       const target =
         first === "consent"
@@ -176,7 +225,11 @@ function WaitlistFlow({ whatsappChannelUrl }: { whatsappChannelUrl?: string }) {
     setBusy(true);
     setMessage("");
     try {
-      const r = await post("/api/waitlist", { ...v, whatsappCountry: dial });
+      const r = await post("/api/waitlist", {
+        ...v,
+        whatsappCountry: dial,
+        level,
+      });
       if (!r.ok) {
         setErrors(r.json.errors || {});
         setMessage(r.json.message || "Something went wrong. Please try again.");
@@ -255,6 +308,10 @@ function WaitlistFlow({ whatsappChannelUrl }: { whatsappChannelUrl?: string }) {
           title="Join the waitlist"
           sub="Free. Takes under a minute. We'll tell you the moment founding enrolment opens."
         />
+        <PlanLine />
+        {errors.level ? (
+          <FieldError id="level-error">{errors.level}</FieldError>
+        ) : null}
         <FieldGroup className="gap-4">
           <Field data-invalid={errors.name ? true : undefined}>
             <FieldLabel htmlFor="name">Full name</FieldLabel>
@@ -540,8 +597,12 @@ function WaitlistFlow({ whatsappChannelUrl }: { whatsappChannelUrl?: string }) {
       {successHead}
       <p className="text-[15px] text-ink-2">
         Thanks{saved?.firstName ? `, ${saved.firstName}` : ""}. That&rsquo;s
-        everything for now. Keep an eye on{" "}
-        {saved?.whatsapp ? "WhatsApp" : "your inbox"} on {shortLabel}.
+        everything for now
+        {levelName
+          ? `. You're on the list for the ${VA_PATH_LABEL} ${levelName} plan, and you'll get the ${levelName} workspace when enrolment opens`
+          : ""}
+        . Keep an eye on {saved?.whatsapp ? "WhatsApp" : "your inbox"} on{" "}
+        {shortLabel}.
       </p>
       {calendar}
       {whatsappChannelUrl ? (
@@ -580,29 +641,38 @@ function CurrencyField() {
 function CheckoutPanel({
   paymentsEnabled,
   onWaitlist,
+  cohortWindow,
 }: {
   paymentsEnabled: boolean;
   onWaitlist: () => void;
+  cohortWindow: string;
+  whatsappChannelUrl?: string;
 }) {
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [message, setMessage] = useState("");
   const { currency, price, chargePrice } = useCurrency();
+  const { level, label: levelName } = useLevel();
 
   async function submit(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
     const v = Object.fromEntries(
       new FormData(ev.currentTarget).entries(),
     ) as Record<string, string>;
-    if (!EMAIL_RE.test((v.email || "").trim())) {
-      setErrors({ email: "Enter the email you'd like your access sent to." });
+    const e: Errors = {};
+    if (!EMAIL_RE.test((v.email || "").trim()))
+      e.email = "Enter the email you'd like your access sent to.";
+    if (!level) e.level = "Choose Beginner, Intermediate or Advanced.";
+    if (Object.keys(e).length) {
+      setErrors(e);
+      setMessage(e.level || "");
       return;
     }
     setErrors({});
     setBusy(true);
     setMessage("");
     try {
-      const r = await post("/api/checkout", { ...v, currency });
+      const r = await post("/api/checkout", { ...v, currency, level });
       if (r.ok && r.json.url) {
         window.location.assign(r.json.url);
         return;
@@ -631,6 +701,32 @@ function CheckoutPanel({
         title="Get founding access"
         sub={`${price}, one-time. Everything included.`}
       />
+      <div
+        className="flex flex-col gap-1 rounded-lg border border-line bg-ground px-4 py-3 text-sm"
+        data-checkout-summary
+      >
+        <p className="font-medium text-ink">
+          {VA_PATH_LABEL}
+          {levelName ? ` · ${levelName}` : ""}
+        </p>
+        <p className="text-ink-2">
+          {price}, one-time. Cohort 1, {cohortWindow}.
+        </p>
+        <p className="text-ink-3">
+          {levelName
+            ? `You'll get the ${levelName} workspace only.`
+            : "Each level gets its own workspace. Choose a level first."}{" "}
+          <a
+            href="#levels"
+            className="font-medium text-brand underline-offset-4 hover:underline"
+          >
+            {levelName ? "Change" : "Choose your level"}
+          </a>
+        </p>
+      </div>
+      {errors.level ? (
+        <FieldError id="co-level-error">{errors.level}</FieldError>
+      ) : null}
       {paymentsEnabled ? (
         <>
           <FieldGroup className="gap-4">

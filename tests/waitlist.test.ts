@@ -18,9 +18,26 @@ test("step 1 validation: consent rules", async () => {
     validateStep1({ name: "A B", email: "a@b.co", whatsappConsent: true })
       .errors.whatsapp,
   );
+  assert.ok(
+    validateStep1({ name: "A B", email: "a@b.co", emailConsent: true }).errors
+      .level,
+  );
   assert.deepEqual(
-    validateStep1({ name: "A B", email: "a@b.co", emailConsent: true }).errors,
+    validateStep1({
+      name: "A B",
+      email: "a@b.co",
+      emailConsent: true,
+      level: "beginner",
+    }).errors,
     {},
+  );
+  assert.ok(
+    validateStep1({
+      name: "A B",
+      email: "a@b.co",
+      emailConsent: true,
+      level: "expert",
+    }).errors.level,
   );
 });
 
@@ -33,6 +50,7 @@ test("signup → profile update → duplicate email only adds information", asyn
       name: "Ngozi A",
       email: "NGOZI@example.com",
       emailConsent: true,
+      level: "beginner",
     }).data,
   );
   assert.equal(first.duplicate, false);
@@ -56,12 +74,15 @@ test("signup → profile update → duplicate email only adds information", asyn
       whatsapp: "08031234567",
       whatsappCountry: "NG",
       whatsappConsent: true,
+      level: "intermediate",
     }).data,
   );
   assert.equal(again.duplicate, true);
   assert.equal(again.signup.name, "Ngozi A"); // not overwritten
   assert.equal(again.signup.consent.email.granted, true); // not downgraded
   assert.equal(again.signup.consent.whatsapp.granted, true); // added
+  assert.equal(first.signup.profile.level, "beginner");
+  assert.equal(again.signup.profile.level, "intermediate"); // preference updated
   const saved = JSON.parse(readFileSync(file, "utf8"));
   assert.equal(saved.length, 1);
   assert.equal(saved[0].consent.whatsapp.textVersion.length > 0, true);

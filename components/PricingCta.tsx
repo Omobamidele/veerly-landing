@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "./Currency";
 import { useLaunch } from "./LaunchProvider";
+import { useLevel } from "./LevelProvider";
 
 export default function PricingCta({
   paymentsEnabled,
@@ -12,10 +13,11 @@ export default function PricingCta({
 }) {
   const { launched } = useLaunch();
   const { price } = useCurrency();
+  const { level } = useLevel();
   return (
     <div className="flex flex-col items-start gap-3">
       <Button asChild variant="stage" size="lg" className="w-full sm:w-auto">
-        <a href="#join-card">
+        <a href={level ? "#join-card" : "#levels"}>
           {launched ? `Get founding access, ${price}` : "Join the waitlist"}
           <ArrowRight data-icon="inline-end" />
         </a>

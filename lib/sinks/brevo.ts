@@ -30,6 +30,7 @@ export function brevoAttributes(s: Signup) {
     COUNTRY: s.profile.country || "",
     CAREER_PATH: s.profile.careerPath || "",
     CAREER_STAGE: s.profile.careerStage || "",
+    LEVEL: s.profile.level || "",
     EMAIL_CONSENT: s.consent.email.granted,
     WHATSAPP_CONSENT: s.consent.whatsapp.granted,
     CONSENT_VERSION: s.consent.email.textVersion,

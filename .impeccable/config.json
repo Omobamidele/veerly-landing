@@ -1,0 +1,14 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "overused-font",
+        "value": "geist",
+        "createdAt": "2026-11-10T10:44:54.854Z",
+        "reason": "Brand font from the Veerly brand kit (Mo's brief)"
+      }
+    ]
+  }
+}

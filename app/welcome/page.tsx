@@ -4,8 +4,9 @@ import { CalendarPlus, Check, Clock } from "lucide-react";
 import { Footer, Nav } from "@/components/SiteChrome";
 import { paymentsEnabled, site } from "@/lib/config";
 import { cohortOne, formatWhen } from "@/lib/launch";
+import { LEVEL_LABEL, parseLevel, VA_PATH_LABEL, type VaLevel } from "@/lib/levels";
 import { processSuccessfulCharge } from "@/lib/payments";
-import { verifyTransaction } from "@/lib/paystack";
+import { parseMetadata, verifyTransaction } from "@/lib/paystack";
 
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
@@ -14,27 +15,35 @@ export const metadata: Metadata = {
 };
 
 type State = "paid" | "pending" | "failed" | "none";
+type Resolved = { state: State; level: VaLevel | null };
 
 async function resolveState(
   reference?: string,
   preview?: string,
-): Promise<State> {
-  if (preview === "paid") return "paid";
-  if (!reference || !paymentsEnabled()) return "none";
+  previewLevel?: string,
+): Promise<Resolved> {
+  if (preview === "paid")
+    return { state: "paid", level: parseLevel(previewLevel) };
+  if (!reference || !paymentsEnabled()) return { state: "none", level: null };
   try {
     const tx = await verifyTransaction(reference); // never trust the redirect alone
+    const level = parseLevel(parseMetadata(tx.metadata).level);
     if (tx.status === "success") {
       const r = await processSuccessfulCharge(tx); // idempotent with the webhook
-      return r.ok ? "paid" : "failed";
+      return { state: r.ok ? "paid" : "failed", level };
     }
-    return tx.status === "abandoned" ||
-      tx.status === "ongoing" ||
-      tx.status === "pending"
-      ? "pending"
-      : "failed";
+    return {
+      state:
+        tx.status === "abandoned" ||
+        tx.status === "ongoing" ||
+        tx.status === "pending"
+          ? "pending"
+          : "failed",
+      level,
+    };
   } catch (err) {
     console.error("[welcome] verify failed", err);
-    return "pending";
+    return { state: "pending", level: null };
   }
 }
 
@@ -44,9 +53,15 @@ export default async function Welcome({
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
   const sp = await searchParams;
-  const state = await resolveState(sp.reference || sp.trxref, sp.preview);
+  const { state, level } = await resolveState(
+    sp.reference || sp.trxref,
+    sp.preview,
+    sp.level,
+  );
+  const levelName = level ? LEVEL_LABEL[level] : null;
   const c1 = cohortOne();
   const cohortStart = formatWhen(new Date(c1.startsAt));
+  const c1Window = "1–28 February 2027";
 
   return (
     <>
@@ -61,8 +76,11 @@ export default async function Welcome({
               </p>
               <h1>Welcome to Veerly.</h1>
               <p className="lede">
-                You&rsquo;re in the founding cohort. Here&rsquo;s what happens
-                next.
+                You&rsquo;re in the founding cohort
+                {levelName
+                  ? `, on the ${VA_PATH_LABEL} ${levelName} plan. You'll get the ${levelName} workspace only. Cohort 1 runs ${c1Window}`
+                  : ""}
+                . Here&rsquo;s what happens next.
                 {process.env.BREVO_PAID_TEMPLATE_ID
                   ? " We've also emailed these steps to you."
                   : ""}
@@ -95,7 +113,11 @@ export default async function Welcome({
                       Create a free Notion account with the same email you paid
                       with. We&rsquo;ll share Job Hunt OS, Portfolio Builder and
                       the Interview Preparation System with you, personalized to
-                      your plan.
+                      your plan
+                      {levelName
+                        ? `, in your ${VA_PATH_LABEL} ${levelName} workspace`
+                        : ""}
+                      .
                     </p>
                     {site.notionAccessUrl ? (
                       <a

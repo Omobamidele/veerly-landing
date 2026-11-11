@@ -42,6 +42,7 @@ export default async function AdminWaitlist() {
               <th>WhatsApp</th>
               <th>Consent</th>
               <th>Path</th>
+              <th>Level</th>
               <th>Payment</th>
             </tr>
           </thead>
@@ -56,12 +57,13 @@ export default async function AdminWaitlist() {
                   {[s.consent.email.granted && "Email", s.consent.whatsapp.granted && "WhatsApp"].filter(Boolean).join(", ") || "—"}
                 </td>
                 <td>{s.profile.careerPath || "—"}</td>
+                <td>{s.profile.level || "—"}</td>
                 <td>{s.payment.status}</td>
               </tr>
             ))}
             {!list.length && (
               <tr>
-                <td colSpan={7}>No signups yet.</td>
+                <td colSpan={8}>No signups yet.</td>
               </tr>
             )}
           </tbody>

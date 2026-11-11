@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useCurrency } from "./Currency";
 import { useLaunch } from "./LaunchProvider";
+import { useLevel } from "./LevelProvider";
 
 /** Primary call to action that follows the launch state. */
 export default function LaunchCta({
@@ -21,6 +22,7 @@ export default function LaunchCta({
 }) {
   const { launched } = useLaunch();
   const { price } = useCurrency();
+  const { level } = useLevel();
   const text = launched
     ? short
       ? "Get access"
@@ -28,7 +30,7 @@ export default function LaunchCta({
     : "Join the waitlist";
   return (
     <Button asChild variant={variant} size={size} className={className}>
-      <a href="#join-card" data-launch-cta>
+      <a href={level ? "#join-card" : "#levels"} data-launch-cta>
         {text}
         {arrow ? <ArrowRight data-icon="inline-end" /> : null}
       </a>

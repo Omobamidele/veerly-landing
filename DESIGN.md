@@ -1,4 +1,4 @@
-# Veerly landing — design spec (v5–v7)
+# Veerly landing — design spec (v5–v8)
 
 Mode: **Persuade** (a launch page: the visitor should understand the offer in one viewport, feel the date approaching, and leave a WhatsApp number).
 Direction (pinned by Mo's brief, no concept roll): **"Blue stage, yellow signal."** Lemon Squeezy's true blue (`#0075AD`, their `--blue-700`) as the stage, at product-site precision. One saturated moment on the whole page: her yellow countdown.
@@ -75,10 +75,11 @@ Sections earn their richness from type scale, numbering, rules and the yellow co
 3. **Personalization.** H2 + paragraph left; right a 2x2 text grid divided by 1px lines; below, a ruled comparison table, labelled "Illustrative example".
 4. **Ten career paths.** Vercel-style 1px cell grid, 5 x 2, text only.
 5. **Inside your Veerly workspace (v7).** Real cropped screenshots of the Virtual Assistant Career OS in Notion: the home, job-hunt pipeline, cohort coach, portfolio builder, interview prep, resource library and Job Hunt OS. A two-tone H2 states this is the VA path; the lede says the other nine paths follow the same system. Each shot sits in a `rounded-xl` frame with a 1px `border-line` and a short caption in a `bg-ground` bar, matching the comparison table. Images are `next/image` WebP in `public/product/`, with `sizes`, intrinsic width/height (no layout shift) and default lazy loading.
-6. **Join (#join).** Left: what happens next as a dated timeline (Today, 1 Dec 9:00 AM WAT, at enrolment, January 2027). Right: the form card (shadcn Field, Input, NativeSelect, Select, Checkbox, Button), WhatsApp with +234 default, two separate unticked consent boxes, optional step 2, success + add-to-calendar. After launch the card becomes Paystack checkout.
-7. **Pricing band (Ink).** $7.99 large, ≈ ₦10,000 one-time; what's included in two columns; CTA; compact yellow countdown repeats here.
-8. **FAQ.** H2 left, shadcn Accordion right.
-9. **Footer.** Logo, belief line, Privacy, Terms, the "does not guarantee employment" line.
+6. **Choose your Virtual Assistant level (v8, #levels).** Three equal cells in the same 1px-grid language as the career paths (`rounded-xl`, `bg-line` gaps, white cells). Each cell has the level name, a one-line "who it's for", short "You'll learn" and "You'll be able to" lists (brand-blue checks, as in the systems rows), and a "Choose Beginner" (etc.) button. The selected cell uses `--tint`. No badges, no "most popular", no per-level prices (the price is the same). A quiet line under the grid states these are skills, not a job guarantee. Cohort 1 dates (1–28 February 2027) and "each level gets its own workspace" sit in the heading block.
+7. **Join (#join).** Left: what happens next as a dated timeline (Today, 1 Dec 9:00 AM WAT, at enrolment, January 2027). Right: the form card (shadcn Field, Input, NativeSelect, Select, Checkbox, Button), WhatsApp with +234 default, two separate unticked consent boxes, optional step 2, success + add-to-calendar. After launch the card becomes Paystack checkout.
+8. **Pricing band (Ink).** $7.99 large, ≈ ₦10,000 one-time; what's included in two columns; CTA; compact yellow countdown repeats here.
+9. **FAQ.** H2 left, shadcn Accordion right.
+10. **Footer.** Logo, belief line, Privacy, Terms, the "does not guarantee employment" line.
 
 ## Motion (GSAP + ScrollTrigger, restrained)
 - One authored entrance: H1 lines, lede and countdown tiles rise 16px and fade in once, power3/expo out, 0.9s, staggered 60ms.

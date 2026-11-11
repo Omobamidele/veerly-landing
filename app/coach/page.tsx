@@ -17,7 +17,7 @@ export default async function CoachPage({
   const sp = await searchParams;
   const cohort = coachCohort(typeof sp.cohort === "string" ? sp.cohort : null);
   return (
-    <main id="main" className="coach min-h-svh bg-white text-ink">
+    <main id="main" className="coach bg-white text-ink">
       <CoachApp cohort={cohort} />
     </main>
   );

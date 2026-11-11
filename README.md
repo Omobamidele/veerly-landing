@@ -4,7 +4,7 @@ Next.js 15 (App Router) + TypeScript. A calm, single-page site with a launch cou
 (email and WhatsApp opt-in), Paystack checkout, a post-payment welcome page, Brevo email sync, a WhatsApp
 launch-notification script, and a small admin view. **Nothing is sent or charged until you add your own keys.**
 
-**Design (v5–v7):** "Blue stage, yellow signal" (Lemon Squeezy true blue #0075AD, navy countdown panel). v7 adds real screenshots of the Virtual Assistant Career OS — see `DESIGN.md` for the spec, references and tokens. Built with Tailwind CSS v4,
+**Design (v5–v8):** "Blue stage, yellow signal" (Lemon Squeezy true blue #0075AD, navy countdown panel). v7 adds real screenshots of the Virtual Assistant Career OS. v8 adds a Virtual Assistant level picker (Beginner, Intermediate, Advanced) before waitlist or checkout — see `DESIGN.md` for the spec, references and tokens. Built with Tailwind CSS v4,
 shadcn/ui (Radix) components in `components/ui/`, and restrained GSAP + ScrollTrigger motion (`components/Motion.tsx`, off for
 `prefers-reduced-motion`). Fonts: Bricolage Grotesque (display) and Geist (body). Previous designs: git tags `v1`, `v2`
 (v1 also in `_v1-archive/`).
@@ -20,11 +20,11 @@ npm run build && npm run start     # production mode on :3210
 Preview states:
 
 - Previews: `/?preview=prelaunch` (before 1 Dec: calm panel, no countdown), `/?preview=promo` (from 1 Dec: countdown to Cohort 1, waitlist only), `/?preview=enrol` (from 1 Jan: checkout open; `/?preview=launched` is the same).
-- `/welcome?preview=paid` shows the post-payment onboarding page.
+- `/welcome?preview=paid` shows the post-payment onboarding page. Add `&level=beginner` (or `intermediate` / `advanced`) to preview the plan on that page.
 - You can force a phase site-wide with `NEXT_PUBLIC_LAUNCH_STATE=prelaunch|promo|enrol`.
 
-Checks: `npm run lint` · `npm run typecheck` · `npm test` (13 tests: Paystack signatures, webhook idempotency,
-consent rules, phone normalisation, Brevo sync with mocked fetch, checkout states, ICS) · `npm run screenshots`.
+Checks: `npm run lint` · `npm run typecheck` · `npm test` (Paystack signatures, webhook idempotency,
+consent rules, VA levels, phone normalisation, Brevo sync with mocked fetch, checkout states, ICS) · `npm run screenshots`.
 
 ## How the launch works
 
@@ -37,6 +37,7 @@ consent rules, phone normalisation, Brevo sync with mocked fetch, checkout state
   announces to screen readers once a minute.
 - **At zero,** the page switches by itself: the hero card becomes "Get founding access", the pricing button goes to checkout,
   and the waitlist copy changes. `/api/checkout` also checks the launch time on the server.
+- **Level choice:** before joining the waitlist or paying, visitors choose a Virtual Assistant level (Beginner, Intermediate or Advanced). Each level has its own workspace; they only receive the one they choose. The price is the same at every level. The choice is saved on the signup, passed in Paystack metadata, and shown in the checkout summary and on the welcome page.
 - **Waitlist step 1:** name, email and WhatsApp number (country picker defaults to Nigeria +234, all countries supported, stored as E.164).
   There are two separate, unticked consent boxes:
   - email updates and marketing;
@@ -63,13 +64,13 @@ consent rules, phone normalisation, Brevo sync with mocked fetch, checkout state
 
 | Sink | Enabled by | What it does |
 |---|---|---|
-| Brevo | `BREVO_API_KEY` | Adds or updates a contact, but only for people who consented. Adds email-consented people to `BREVO_LIST_ID` and WhatsApp-consented people to `BREVO_WHATSAPP_LIST_ID`, with attributes FIRSTNAME, LASTNAME, WHATSAPP, COUNTRY, CAREER_PATH, CAREER_STAGE, EMAIL_CONSENT, WHATSAPP_CONSENT, CONSENT_VERSION and PAID. Optional double opt-in (`BREVO_DOI_*`) or welcome template. Buyers go to `BREVO_PAID_LIST_ID` and receive `BREVO_PAID_TEMPLATE_ID` |
+| Brevo | `BREVO_API_KEY` | Adds or updates a contact, but only for people who consented. Adds email-consented people to `BREVO_LIST_ID` and WhatsApp-consented people to `BREVO_WHATSAPP_LIST_ID`, with attributes FIRSTNAME, LASTNAME, WHATSAPP, COUNTRY, CAREER_PATH, CAREER_STAGE, LEVEL, EMAIL_CONSENT, WHATSAPP_CONSENT, CONSENT_VERSION and PAID. Optional double opt-in (`BREVO_DOI_*`) or welcome template. Buyers go to `BREVO_PAID_LIST_ID` and receive `BREVO_PAID_TEMPLATE_ID` |
 | Notion | `NOTION_TOKEN` + `NOTION_WAITLIST_DATABASE_ID` | One row per person, updated in place (properties listed in `lib/sinks/notion.ts`) |
 | Webhook | `WAITLIST_WEBHOOK_URL` | POSTs `{event, signup}`. Use it for Google Sheets (Apps Script), Zapier, Make or n8n. Signed with `WAITLIST_WEBHOOK_SECRET` |
 
 To add another tool, add a file in `lib/sinks/` that implements `Sink`. The UI doesn't change.
 
-Create these custom contact attributes in Brevo first (Contacts → Settings → Attributes): CAREER_PATH, CAREER_STAGE, COUNTRY
+Create these custom contact attributes in Brevo first (Contacts → Settings → Attributes): CAREER_PATH, CAREER_STAGE, LEVEL, COUNTRY
 (text), EMAIL_CONSENT, WHATSAPP_CONSENT, PAID (boolean), CONSENT_VERSION (text). FIRSTNAME, LASTNAME and WHATSAPP already exist.
 
 ## Email: why Brevo
