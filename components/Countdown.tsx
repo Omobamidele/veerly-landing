@@ -61,15 +61,16 @@ function Tiles({
 }) {
   return (
     <div
-      className={cn("grid grid-cols-4", board ? "gap-2 sm:gap-3" : "gap-1.5")}
+      className={cn("grid grid-cols-4", board ? "gap-2.5 sm:gap-3" : "gap-1.5")}
       aria-hidden="true"
     >
       {cells.map(([v, unit]) => (
-        <div key={unit} className="flex flex-col gap-2" data-tile>
+        <div key={unit} className="flex min-w-0 flex-col gap-2" data-tile>
+          {/* One solid yellow face: no flap seam, bevel or inset lines (they render as a split at 125% scaling). */}
           <div
             className={cn(
-              "flap flex items-center justify-center overflow-hidden bg-yellow text-ink shadow-[0_1px_0_rgb(255_255_255/0.45)_inset,0_-2px_0_rgb(0_43_66/0.18)_inset,0_12px_24px_-12px_rgb(0_0_0/0.6)]",
-              board ? "aspect-[1/1.02] rounded-xl" : "h-16 rounded-lg",
+              "countdown-tile @container grid place-items-center overflow-hidden bg-yellow text-ink",
+              board ? "aspect-square rounded-xl" : "h-16 rounded-lg",
             )}
           >
             <span
@@ -77,7 +78,11 @@ function Tiles({
               className={cn(
                 "display tnum leading-none",
                 unit === "Seconds" && "tick",
-                board ? "text-[clamp(38px,4.6vw,64px)]" : "text-[34px]",
+                board
+                  ? v.length > 2
+                    ? "text-[38cqw]"
+                    : "text-[50cqw]"
+                  : "text-[32px]",
               )}
             >
               {v}
@@ -85,8 +90,8 @@ function Tiles({
           </div>
           <span
             className={cn(
-              "text-center tracking-wide",
-              board ? "text-xs text-white/85" : "text-[11px] text-white/60",
+              "text-center leading-none font-medium tracking-[0.02em]",
+              board ? "text-[12px] text-white/80" : "text-[11px] text-white/60",
             )}
           >
             {unit}
@@ -151,9 +156,14 @@ export default function Countdown({
           Join the waitlist and we&rsquo;ll message you on WhatsApp when it
           opens. Nothing to pay until then.
         </p>
-        <p className="border-t border-white/15 pt-4 text-sm text-white/85">
-          <span className="text-white">{when}</span>
-          {cohortDay ? ` · ${cohortDay}` : ""}
+        <p className="flex flex-wrap gap-x-1.5 border-t border-white/15 pt-4 text-sm text-white/85">
+          <span className="whitespace-nowrap text-white">{when}</span>
+          {cohortDay ? (
+            <span className="whitespace-nowrap">
+              <span aria-hidden="true">· </span>
+              {cohortDay}
+            </span>
+          ) : null}
         </p>
         <span className="sr-only" aria-live="polite">
           {spoken || `Founding enrolment opens ${when}.`}

@@ -58,7 +58,7 @@ Strategy: **Committed** at the top (the stage owns the first viewport), **Restra
 ## Type
 - Display: **Bricolage Grotesque** (variable, opsz). H1 `clamp(44px, 6.4vw, 92px)`, weight 700, tracking -0.035em, line-height 0.98. H2 `clamp(32px, 3.8vw, 52px)`, weight 700, tracking -0.03em, line-height 1.04, two-tone (ink + 45% ink).
 - Body: **Geist**. Body 16/1.6, lede 19/1.5, UI 14/1.4, captions 13/1.4. Tabular numerals for all numbers.
-- Countdown digits: Bricolage 700, `clamp(40px, 5vw, 64px)`, tabular, ink on yellow.
+- Countdown digits: Bricolage 800 at 50% of the tile width (container query, `50cqw`), tabular, ink on one solid yellow face. No flap line, bevel or inset border (they read as a split at 125% Windows scaling).
 - Max measure 62ch for running text. Sentence case everywhere.
 
 ## Grid and spacing
@@ -133,7 +133,7 @@ Copy on the prelaunch/promo hero board is Mo's wording exactly. Payment still op
 ## v6.3 — Cohort coach (`/coach`)
 
 - One commitment per cohort, not a task gate: every expectation is visible from the start, grouped by Job Hunt OS, Portfolio Builder, Interview Preparation System and Cohort rhythm; ticking is free-form.
-- White ground to sit naturally inside a Notion page; single navy `.countdown-panel` with the same yellow `#FFD84D` flap tiles as the landing page; blue `#0075AD` for progress, labels and actions; `--tint` for the coach note. No violet.
+- White ground to sit naturally inside a Notion page; single navy `.countdown-panel` with the same yellow `#FFD84D` solid countdown tiles (no flap line) as the landing page; blue `#0075AD` for progress, labels and actions; `--tint` for the coach note. No violet.
 - Windows align to the cohort start: starting early shows "Before day one" focus; late starters share the cohort finish line.
 - Tone: calm and never shaming. The closed state leads with what was finished and how to keep going. No job promises.
 - Accessibility: Radix alert dialogs (focus trap, Esc = "Not yet"), labelled checkboxes in fieldsets, `role=progressbar`, polite live summary for the countdown (seconds aren't announced), no entrance animation; transitions disabled under reduced motion.

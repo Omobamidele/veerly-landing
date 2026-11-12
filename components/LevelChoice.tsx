@@ -99,7 +99,7 @@ export default function LevelChoice({
                     aria-pressed={selected}
                     onClick={() => setPath(p.id)}
                     className={cn(
-                      "flex h-full min-h-16 w-full items-center rounded-xl px-3.5 py-3 text-left text-[14px] leading-snug font-semibold tracking-[-0.01em] transition-colors",
+                      "flex h-full min-h-16 w-full min-w-0 items-center rounded-xl px-3.5 py-3 text-left text-[14px] leading-snug font-semibold tracking-[-0.01em] text-pretty transition-colors",
                       selected
                         ? "bg-yellow text-ink"
                         : "bg-white/8 text-white hover:bg-white/14",
@@ -145,11 +145,11 @@ export default function LevelChoice({
                           className="flex items-start gap-2.5 border-b border-ink/10 py-2.5 text-[15px] leading-snug last:border-b-0"
                         >
                           <IconCheck
-                            className="mt-0.5 size-4 shrink-0 text-navy"
+                            className="icon-first-line size-4 shrink-0 text-navy"
                             strokeWidth={2.5}
                             aria-hidden="true"
                           />
-                          {item}
+                          <span className="min-w-0">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -166,11 +166,11 @@ export default function LevelChoice({
                           className="flex items-start gap-2.5 border-b border-ink/10 py-2.5 text-[15px] leading-snug last:border-b-0"
                         >
                           <IconCheck
-                            className="mt-0.5 size-4 shrink-0 text-navy"
+                            className="icon-first-line size-4 shrink-0 text-navy"
                             strokeWidth={2.5}
                             aria-hidden="true"
                           />
-                          {item}
+                          <span className="min-w-0">{item}</span>
                         </li>
                       ))}
                     </ul>
@@ -191,7 +191,7 @@ export default function LevelChoice({
                       {selected ? (
                         <>
                           <IconCheck data-icon="inline-start" />
-                          {pathLabel} · {LEVEL_LABEL[card.id]} selected
+                          {LEVEL_LABEL[card.id]} selected
                         </>
                       ) : (
                         card.cta

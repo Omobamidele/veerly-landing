@@ -265,7 +265,7 @@ export default async function Home({
         <a className="skip" href="#main">
           Skip to content
         </a>
-        <EnrolBanner />
+        <EnrolBanner cohortWindow={c1Window} />
         <Nav tone="stage" cta={<NavCta />} />
         <Motion>
           <main id="main">
@@ -326,7 +326,7 @@ export default async function Home({
                       <CheckoutNote className="max-w-[52ch] text-white/95" />
                     </div>
                   </div>
-                  <div className="lg:col-span-5 lg:col-start-8">
+                  <div className="w-full max-w-[560px] lg:col-span-5 lg:col-start-8 lg:max-w-none">
                     <Countdown cohortDay={`${c1.name} starts ${c1Day}`} />
                   </div>
                 </div>
@@ -346,8 +346,8 @@ export default async function Home({
                       <span className="tnum font-display text-sm font-bold text-white">
                         {sys.n}
                       </span>
-                      <span className="flex flex-1 items-center justify-between gap-3 text-[15px] font-medium text-white">
-                        {sys.name}
+                      <span className="flex min-w-0 flex-1 items-center justify-between gap-3 text-[15px] font-medium text-white">
+                        <span className="min-w-0">{sys.name}</span>
                         <IconArrowDown
                           className="size-4 shrink-0 text-white/80 transition-transform group-hover:translate-y-0.5 group-hover:text-white"
                           aria-hidden="true"
@@ -417,14 +417,14 @@ export default async function Home({
                           {sys.points.map((pt) => (
                             <li
                               key={pt}
-                              className="flex items-center gap-3 border-b border-line py-3.5 text-[16px] text-ink last:border-b-0"
+                              className="flex items-start gap-3 border-b border-line py-3.5 text-[16px] leading-snug text-ink last:border-b-0"
                             >
                               <IconCheck
-                                className="size-4 shrink-0 text-brand"
+                                className="icon-first-line size-4 shrink-0 text-brand"
                                 strokeWidth={2.25}
                                 aria-hidden="true"
                               />
-                              {pt}
+                              <span className="min-w-0">{pt}</span>
                             </li>
                           ))}
                         </ul>
@@ -626,13 +626,17 @@ export default async function Home({
                       >
                         <span
                           aria-hidden="true"
-                          className={
-                            i === 0
-                              ? "mt-1.5 size-[11px] rounded-full bg-brand"
-                              : "mt-1.5 size-[11px] rounded-full border border-brand/50 bg-white"
-                          }
-                        />
-                        <div className="flex flex-col gap-1">
+                          className="flex h-[1lh] items-center text-[13px]"
+                        >
+                          <span
+                            className={
+                              i === 0
+                                ? "size-[11px] rounded-full bg-brand"
+                                : "size-[11px] rounded-full border border-brand/50 bg-white"
+                            }
+                          />
+                        </span>
+                        <div className="flex min-w-0 flex-col gap-1">
                           <span className="tnum text-[13px] font-medium text-brand">
                             {when}
                           </span>
@@ -688,14 +692,14 @@ export default async function Home({
                     {included.map((i) => (
                       <li
                         key={i}
-                        className="flex items-center gap-3 border-b border-white/12 py-4 text-[16px] text-white/85"
+                        className="flex items-start gap-3 border-b border-white/12 py-4 text-[16px] leading-snug text-white/85"
                       >
                         <IconCheck
-                          className="size-4 shrink-0 text-tint"
+                          className="icon-first-line size-4 shrink-0 text-tint"
                           strokeWidth={2.25}
                           aria-hidden="true"
                         />
-                        {i}
+                        <span className="min-w-0">{i}</span>
                       </li>
                     ))}
                   </ul>

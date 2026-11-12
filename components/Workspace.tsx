@@ -220,7 +220,7 @@ export default function Workspace() {
                   onClick={() => setActive(i)}
                   onKeyDown={(e) => onKey(e, i)}
                   className={cn(
-                    "group flex shrink-0 snap-start items-center gap-3 rounded-xl px-3.5 py-3 text-left transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow lg:px-4 lg:py-3.5",
+                    "group flex shrink-0 snap-start items-center gap-3 rounded-xl lg:items-start px-3.5 py-3 text-left transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-yellow lg:px-4 lg:py-3.5",
                     on
                       ? "bg-yellow text-ink"
                       : "text-white/85 hover:bg-white/[0.07] hover:text-white",
@@ -239,8 +239,8 @@ export default function Workspace() {
                   >
                     <s.Icon className="size-5" accent={on} strokeWidth={1.9} />
                   </span>
-                  <span className="flex flex-col">
-                    <span className="text-[15px] font-semibold whitespace-nowrap">
+                  <span className="flex min-w-0 flex-col gap-0.5 lg:min-h-9 lg:justify-center">
+                    <span className="text-[15px] leading-tight font-semibold whitespace-nowrap">
                       {s.tab}
                     </span>
                     <span
@@ -308,7 +308,7 @@ export default function Workspace() {
 
         <p className="flex items-start gap-2.5 text-[14px] text-white/70">
           <IconPath
-            className="mt-0.5 size-4 shrink-0 text-yellow"
+            className="icon-first-line size-4 shrink-0 text-yellow"
             accent={false}
             aria-hidden="true"
           />

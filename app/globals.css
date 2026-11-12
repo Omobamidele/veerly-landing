@@ -184,17 +184,15 @@
     top: 12px;
   }
 
-  /* Countdown tile flap line */
-  .flap {
-    position: relative;
+  /* Countdown tile: one flat yellow face. No flap line, bevel or inset border; at 125% Windows scaling those
+     land on half pixels and show as a split through the digits. Depth comes from a soft outer shadow only. */
+  .countdown-tile {
+    box-shadow: 0 14px 28px -16px rgb(0 0 0 / 0.55);
+    backface-visibility: hidden;
   }
-  .flap::after {
-    content: "";
-    position: absolute;
-    inset-inline: 0;
-    top: 50%;
-    height: 1px;
-    background: rgb(13 27 38 / 0.14);
+  /* Icon beside text that may wrap: centre it on the first line, whatever font or line-height loads. */
+  .icon-first-line {
+    margin-top: calc(0.5lh - 0.5rem);
   }
   .tick {
     display: inline-block;

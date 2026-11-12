@@ -206,7 +206,7 @@ function Countdown({ t }: { t: CoachTimeline | null }) {
       <div className="grid grid-cols-4 gap-2" aria-hidden="true">
         {cells.map(([v, unit]) => (
           <div key={unit} className="flex flex-col gap-1.5">
-            <div className="flap flex h-[62px] items-center justify-center overflow-hidden rounded-[10px] bg-yellow text-ink shadow-[0_1px_0_rgb(255_255_255/0.45)_inset,0_-2px_0_rgb(0_43_66/0.18)_inset,0_10px_20px_-12px_rgb(0_0_0/0.6)]">
+            <div className="countdown-tile grid h-[62px] place-items-center overflow-hidden rounded-[10px] bg-yellow text-ink">
               <span className="display tnum text-[34px] leading-none">{v}</span>
             </div>
             <span className="text-center text-[11px] tracking-wide text-white/80">
