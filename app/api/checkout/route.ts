@@ -3,6 +3,7 @@ import { paymentsEnabled, pricing, site } from "@/lib/config";
 import { currentPhase, enrolAt, formatWhen, paymentOpen } from "@/lib/launch";
 import { initializeTransaction, newReference, priceFor } from "@/lib/paystack";
 import { LEVEL_LABEL, parseLevel, parsePath, pathLabel } from "@/lib/levels";
+import { parseLevelSource } from "@/lib/quiz";
 import { chargeCurrencyFor, isCurrency } from "@/lib/pricing";
 import { clientKey, rateLimited } from "@/lib/ratelimit";
 import { markPending, signupForCheckout } from "@/lib/waitlist";
@@ -79,7 +80,11 @@ export async function POST(req: Request) {
     );
 
   try {
-    const s = await signupForCheckout(email, name, { level, careerPath });
+    const s = await signupForCheckout(email, name, {
+      level,
+      careerPath,
+      levelSource: parseLevelSource(body.levelSource),
+    });
     if (s.payment.status === "paid")
       return NextResponse.json({ ok: true, url: `/welcome?already=1` });
     const { amount } = priceFor(currency);

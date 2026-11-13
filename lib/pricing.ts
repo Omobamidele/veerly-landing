@@ -41,6 +41,125 @@ export const PRICES: Record<DisplayCurrency, Row> = {
   AUD: { amount: 11.49, name: "Australian dollar", locale: "en-US" },
 };
 
+/**
+ * LEVEL ADD-ON: the additional fee for each extra level, after checkout.
+ *
+ * Two fixed prices, both set by Mo:
+ *   - US$3.99 for everyone outside Nigeria. Visitors also see an APPROXIMATE amount in their own
+ *     currency beside it, worked out from the single rate table below (nothing is fetched live).
+ *   - NGN 5,000 for visitors who pick naira, whatever the exchange rate. Static: no "about", no dollars.
+ *
+ * What Paystack charges (see `addonChargeFor`): naira visitors pay NGN 5,000. Everyone else pays US$3.99
+ * when Paystack USD is on (PAYSTACK_ENABLE_USD=true). A Nigerian Paystack business may not be able to take
+ * USD yet; until it can, everyone is charged the same static NGN 5,000.
+ */
+export const LEVEL_CHANGE_PRICES = { USD: 3.99, NGN: 5000 } as const;
+export const LEVEL_CHANGE_USD = LEVEL_CHANGE_PRICES.USD;
+
+type RateRow = {
+  /** Units of this currency per US$1. Approximate, for display only. */
+  perUsd: number;
+  /** Round the approximate amount to the nearest multiple of this (0.01 keeps cents/pence). */
+  step: number;
+  /** Where the rate came from and when. */
+  asOf: string;
+};
+
+/** The one exchange-rate table. Approximate. Last updated 13 November 2026. */
+export const USD_RATES_UPDATED = "13 November 2026";
+export const USD_RATES: Record<DisplayCurrency, RateRow> = {
+  USD: { perUsd: 1, step: 0.01, asOf: "13 Nov 2026" },
+  // Central Bank of Nigeria official (NFEM) rate, 13 Nov 2026: about N1,356 per US$1.
+  // Not used for the add-on: naira visitors see the fixed N5,000 instead. Kept so every currency has a row.
+  NGN: { perUsd: 1356, step: 100, asOf: "13 Nov 2026 (CBN official)" },
+  // The rest are the reference mid-rates listed at the top of this file (9-10 Nov 2026).
+  GBP: { perUsd: 0.746, step: 0.01, asOf: "10 Nov 2026" },
+  EUR: { perUsd: 0.893, step: 0.01, asOf: "10 Nov 2026" },
+  CAD: { perUsd: 1.409, step: 0.01, asOf: "10 Nov 2026" },
+  GHS: { perUsd: 11.69, step: 1, asOf: "10 Nov 2026" },
+  KES: { perUsd: 130, step: 10, asOf: "10 Nov 2026" },
+  ZAR: { perUsd: 16.42, step: 1, asOf: "10 Nov 2026" },
+  INR: { perUsd: 93.9, step: 5, asOf: "10 Nov 2026" },
+  AUD: { perUsd: 1.448, step: 0.01, asOf: "10 Nov 2026" },
+};
+
+/** US$3.99 converted at the table rate and rounded to a friendly amount (the "about" amount). */
+export function convertedLevelChange(code: DisplayCurrency): number {
+  const { perUsd, step } = USD_RATES[code];
+  return Number((Math.round((LEVEL_CHANGE_USD * perUsd) / step) * step).toFixed(2));
+}
+
+/**
+ * What the add-on looks like in a currency.
+ * - NGN: the fixed price only ("N5,000"), never approximate.
+ * - USD: "$3.99".
+ * - Anything else: "$3.99" with an approximate local amount beside it.
+ */
+export function levelChangeParts(code: DisplayCurrency): {
+  /** The headline amount. */
+  main: string;
+  /** Approximate local amount, only for currencies other than USD and NGN. */
+  approx: string | null;
+} {
+  if (code === "NGN")
+    return { main: formatPrice("NGN", LEVEL_CHANGE_PRICES.NGN), approx: null };
+  const main = formatPrice("USD", LEVEL_CHANGE_USD);
+  if (code === "USD") return { main, approx: null };
+  return { main, approx: formatPrice(code, convertedLevelChange(code)) };
+}
+
+/**
+ * What the currency dropdown shows beside the add-on price: "₦5,000" for naira (the fixed price, not a
+ * conversion), "$3.99" for US dollars, and "about £2.98" for everything else.
+ */
+export function levelFeeLabel(code: DisplayCurrency): string {
+  const { main, approx } = levelChangeParts(code);
+  return approx ? `about ${approx}` : main;
+}
+
+/** "₦5,000", "$3.99", or "$3.99 (about £2.98)". */
+export function formatLevelChange(code: DisplayCurrency): string {
+  const { main, approx } = levelChangeParts(code);
+  return approx ? `${main} (about ${approx})` : main;
+}
+
+/** Quiet line explaining the approximate amount, or null when nothing is approximate. */
+export function levelChangeRateNote(code: DisplayCurrency): string | null {
+  if (code === "USD" || code === "NGN") return null;
+  return `The ${code} amount is approximate (rates last updated ${USD_RATES_UPDATED}), shown so you can convert. The fee is ${formatPrice("USD", LEVEL_CHANGE_USD)}.`;
+}
+
+/**
+ * What Paystack charges for the add-on, in whole currency units.
+ * Naira visitors: NGN 5,000. Others: US$3.99 when USD is enabled, else the same static NGN 5,000.
+ */
+export function addonChargeFor(
+  display: DisplayCurrency,
+  usdEnabled: boolean,
+): { currency: ChargeCurrency; amount: number } {
+  if (display === "NGN")
+    return { currency: "NGN", amount: LEVEL_CHANGE_PRICES.NGN };
+  if (usdEnabled) return { currency: "USD", amount: LEVEL_CHANGE_USD };
+  return { currency: "NGN", amount: LEVEL_CHANGE_PRICES.NGN };
+}
+
+/** Every add-on charge we would accept from Paystack right now: [currency, subunit]. */
+export function acceptedAddonCharges(
+  usdEnabled: boolean,
+): { currency: ChargeCurrency; amount: number }[] {
+  const out: { currency: ChargeCurrency; amount: number }[] = [
+    { currency: "NGN", amount: toSubunit(LEVEL_CHANGE_PRICES.NGN) },
+  ];
+  if (usdEnabled)
+    out.push({ currency: "USD", amount: Math.round(LEVEL_CHANGE_USD * 100) });
+  return out;
+}
+
+/** Paystack subunit (kobo / cents) for a charge from `addonChargeFor`. */
+export function toSubunit(amount: number): number {
+  return Math.round(amount * 100);
+}
+
 /** Order in the selector. */
 export const CURRENCIES = Object.keys(PRICES) as DisplayCurrency[];
 export const FALLBACK_CURRENCY: DisplayCurrency = "USD";

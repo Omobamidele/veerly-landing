@@ -15,6 +15,10 @@ import {
   chargeCurrencyFor,
   checkoutNote,
   detectCurrency,
+  formatLevelChange,
+  levelChangeParts,
+  levelChangeRateNote,
+  levelFeeLabel,
   formatPrice,
   isCurrency,
   type ChargeCurrency,
@@ -27,6 +31,12 @@ type CurrencyState = {
   setCurrency: (c: DisplayCurrency) => void;
   /** Formatted price in the chosen currency, e.g. "₦10,000". */
   price: string;
+  /** Additional fee for an extra level, e.g. "₦10,000" or "$3.99 (about £2.98)". */
+  levelChangePrice: string;
+  /** The same fee split into its headline amount and (outside Nigeria and the US) an approximate local amount. */
+  levelChange: { main: string; approx: string | null };
+  /** Explains that the local amount is approximate; null when nothing is approximate. */
+  levelChangeNote: string | null;
   /** What Paystack will actually charge. */
   charge: ChargeCurrency;
   chargePrice: string;
@@ -118,6 +128,9 @@ export function CurrencyProvider({
         currency,
         setCurrency,
         price: formatPrice(currency),
+        levelChangePrice: formatLevelChange(currency),
+        levelChange: levelChangeParts(currency),
+        levelChangeNote: levelChangeRateNote(currency),
         charge,
         chargePrice: formatPrice(charge),
         note: checkoutNote(currency, usdEnabled),
@@ -141,18 +154,38 @@ export function Price({ className }: { className?: string }) {
   return <span className={cn("tnum", className)}>{price}</span>;
 }
 
+/**
+ * The additional fee for an extra level in the visitor's currency: "₦10,000" in Nigeria, "$3.99" in the US,
+ * and "$3.99 (about £2.98)" elsewhere.
+ */
+export function LevelChangeFee({ className }: { className?: string }) {
+  const { levelChange } = useCurrency();
+  return (
+    <span className={cn("tnum", className)} data-level-change-fee>
+      {levelChange.main}
+      {levelChange.approx ? ` (about ${levelChange.approx})` : ""}
+    </span>
+  );
+}
+
 /** Currency picker. `tone` matches the surface it sits on. */
 export function CurrencySelect({
   tone = "light",
   className,
   id,
   detailed = false,
+  amounts = "course",
+  label = "Currency",
 }: {
   tone?: "stage" | "dark" | "light";
   className?: string;
   id?: string;
   /** Show the currency name in the closed trigger too (for full-width form fields). */
   detailed?: boolean;
+  /** Which price to list beside each currency: the course price, or the additional-level fee. */
+  amounts?: "course" | "level-fee";
+  /** Accessible name for the picker. */
+  label?: string;
 }) {
   const { currency, setCurrency } = useCurrency();
   return (
@@ -163,7 +196,7 @@ export function CurrencySelect({
       <SelectTrigger
         id={id}
         size="sm"
-        aria-label="Currency"
+        aria-label={label}
         data-currency-select
         className={cn(
           "tnum h-10 gap-2 rounded-lg px-3 text-[13px] font-semibold md:text-[13px]",
@@ -182,10 +215,19 @@ export function CurrencySelect({
               <span className="font-medium text-ink-3">
                 {PRICES[currency].name}
               </span>
+              {amounts === "level-fee" ? (
+                <span className="ml-auto font-medium text-ink-2">
+                  {levelFeeLabel(currency)}
+                </span>
+              ) : null}
             </>
           ) : (
             <span className="inline-flex items-center gap-1.5">
-              <span>{formatPrice(currency)}</span>
+              <span>
+                {amounts === "level-fee"
+                  ? levelFeeLabel(currency)
+                  : formatPrice(currency)}
+              </span>
               <span className="font-medium opacity-70">{currency}</span>
             </span>
           )}
@@ -201,7 +243,7 @@ export function CurrencySelect({
             <span className="w-9 shrink-0 font-semibold text-ink">{c}</span>
             <span className="flex-1 text-ink-3">{PRICES[c].name}</span>
             <span className="ml-auto font-semibold text-ink">
-              {formatPrice(c)}
+              {amounts === "level-fee" ? levelFeeLabel(c) : formatPrice(c)}
             </span>
           </SelectItem>
         ))}

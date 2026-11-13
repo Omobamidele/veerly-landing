@@ -1,6 +1,6 @@
 import { createHmac, randomBytes, timingSafeEqual } from "crypto";
 import { pricing } from "./config";
-import { chargeAmount, type ChargeCurrency } from "./pricing";
+import { acceptedAddonCharges, chargeAmount, type ChargeCurrency } from "./pricing";
 
 /**
  * Paystack (primary payments for Nigeria). Docs:
@@ -162,4 +162,20 @@ export function isExpectedCharge(
     const p = priceFor(c);
     return p.currency === tx.currency && p.amount === tx.amount;
   });
+}
+
+/** Is this metadata from a level add-on purchase? */
+export const isAddonMetadata = (meta: Record<string, unknown>) => meta.product === "level_addon";
+
+/**
+ * An add-on charge is accepted if it matches an add-on price we would charge today, or the exact amount we
+ * recorded when the order was started (so a rate-table edit between "pay" and "paid" can't strand a payment).
+ */
+export function isExpectedAddonCharge(
+  tx: Pick<PaystackTransaction, "status" | "amount" | "currency">,
+  recorded?: { amount: number; currency: string } | null,
+) {
+  if (tx.status !== "success") return false;
+  if (recorded && recorded.amount === tx.amount && recorded.currency === tx.currency) return true;
+  return acceptedAddonCharges(pricing.usdEnabled).some((c) => c.currency === tx.currency && c.amount === tx.amount);
 }

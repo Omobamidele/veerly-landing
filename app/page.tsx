@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { IconArrowDown, IconCheck } from "@/components/icons/veerly-icons";
 import Countdown from "@/components/Countdown";
 import EnrolBanner from "@/components/EnrolBanner";
 import JoinHeading from "@/components/JoinHeading";
 import LevelChoice from "@/components/LevelChoice";
 import { LevelProvider } from "@/components/LevelProvider";
+import LevelQuizLink from "@/components/LevelQuizLink";
 import { LaunchProvider } from "@/components/LaunchProvider";
 import LaunchCta, { NavCta } from "@/components/LaunchCta";
 import Motion from "@/components/Motion";
@@ -22,6 +24,7 @@ import { headers } from "next/headers";
 import {
   CheckoutNote,
   CurrencyProvider,
+  LevelChangeFee,
   CurrencySelect,
   Price,
 } from "@/components/Currency";
@@ -208,7 +211,7 @@ export default async function Home({
     ],
   ];
 
-  const faqs: [string, string][] = [
+  const faqs: [string, React.ReactNode][] = [
     [
       "Who is Veerly for?",
       "Anyone pursuing remote work or growing a remote career, in any remote-friendly field: first remote job, moving into remote work, career changers, freelancers moving into full-time roles, graduates and experienced professionals. You don't need to work in tech or sales.",
@@ -230,6 +233,41 @@ export default async function Home({
     [
       "What's the difference between Beginner, Intermediate and Advanced?",
       "Every career path has three levels. Beginner starts from zero and assumes very little. Intermediate is for people who already know the basics of that path and want to run systems, not just single tasks. Advanced is for people who already do the work and want to specialise, lead or design how the work is done. Each path and level has its own workspace, and you only receive the one you choose. The price is the same for every path and level.",
+    ],
+    [
+      "How do I know which level to choose?",
+      <>
+        Pick Beginner if the work is new to you, or you have only helped friends
+        and family. Pick Intermediate if you know the basics and want to run
+        whole systems. Pick Advanced if you already do this work for clients or
+        an employer. Still not sure? Take the{" "}
+        <LevelQuizLink>1-minute level check</LevelQuizLink>: five short
+        questions that suggest a level. It is only a suggestion, so take your
+        time and choose the level you are sure about. Getting another level
+        later is an additional fee of <LevelChangeFee />.
+      </>,
+    ],
+    [
+      "Can I share my workspace?",
+      "No. Your purchase is a personal licence for your own copy: duplicate it into your own Notion and edit it for your own learning, but please don't share, resell or give copies or the link to anyone else. Doing so ends your access with no refund.",
+    ],
+    [
+      "Can I change my level later?",
+      <>
+        Choosing or changing your level on this page before you pay is free.
+        After you have paid, each extra level you want is an additional fee of{" "}
+        <LevelChangeFee />, paid once per level. It is there so you stop and
+        make sure before you choose. If you picked the wrong one, go to the{" "}
+        <Link
+          href="/add-level"
+          className="rounded-sm font-medium text-brand underline underline-offset-4 outline-none hover:text-brand-press focus-visible:ring-3 focus-visible:ring-ring/50"
+        >
+          Get another level
+        </Link>{" "}
+        page, enter the email or WhatsApp number you paid with, pick the level
+        you want and pay the fee. We then send you the Notion link for that
+        level. You keep the level you already paid for.
+      </>,
     ],
     [
       "When does the cohort start?",

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Footer, Nav } from "@/components/SiteChrome";
 import { cohortOne, enrolAt, formatWhen } from "@/lib/launch";
+import { USD_RATES_UPDATED, formatLevelChange } from "@/lib/pricing";
 
 export const metadata: Metadata = { title: "Terms (draft)" };
 
@@ -41,6 +42,24 @@ export default function Terms() {
             published before enrolment opens.
           </p>
 
+          <h2>Personal licence</h2>
+          <p className="draft-note">
+            Draft for Mo to approve, like the refund section below.
+          </p>
+          <p>
+            Each purchase is a personal, single-user licence. It covers your
+            own copy of the Veerly workspace for the career path and level you
+            chose. You may duplicate it into your own Notion and edit it for
+            your own learning.
+          </p>
+          <p>
+            You may not share, resell, republish or give copies of the
+            workspace, or the link to the original, to anyone else. If you do,
+            your access to Veerly ends (the coach, videos, feedback, community
+            and future refreshes) and we will not refund you. Veerly keeps all
+            rights to the content.
+          </p>
+
           <h2>Payments and refunds</h2>
           <p>
             Payments are processed by Paystack.
@@ -68,6 +87,37 @@ export default function Terms() {
             If Veerly has to cancel a cohort, or cannot deliver the workspace
             you paid for, you will be offered a full refund or a place on a
             later cohort.
+          </p>
+
+          <h3>Level changes and extra levels</h3>
+          <p className="draft-note">
+            Draft for Mo to approve, like the refund section above.
+          </p>
+          <p>
+            Each career path and level has its own workspace, and you choose
+            one when you enrol. Choosing or changing your level on the website
+            before you pay is free.
+          </p>
+          <p>
+            After you have paid, each extra level you want is a separate
+            additional fee (an add-on): {formatLevelChange("USD")} for each
+            level, or {formatLevelChange("NGN")} if you pay in naira. Outside
+            Nigeria the website also shows an approximate amount in your own
+            currency so you can convert; it is for reference only (see{" "}
+            {formatLevelChange("GBP")} for an example, using rates last updated{" "}
+            {USD_RATES_UPDATED}) and the fee itself stays the same. You keep
+            the level you already paid for. The fee is separate from the
+            founding price and is not refundable, except where the law
+            requires it.
+          </p>
+          <p>
+            You buy an extra level on the &ldquo;Get another level&rdquo; page.
+            You can only buy a level you do not already have. After your
+            payment is confirmed, we send you the Notion link for that level by
+            WhatsApp or email. This is checked by hand against our payment
+            records, so it may take a little time. Each level you add is a
+            personal licence for you only, with the same rules as your first
+            level.
           </p>
 
           <h2>Changes</h2>

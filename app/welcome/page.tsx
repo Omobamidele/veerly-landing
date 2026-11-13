@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { IconCalendarPlus, IconCheck, IconClock } from "@/components/icons/veerly-icons";
+import RememberOwned from "@/components/OwnedLevels";
 import { Footer, Nav } from "@/components/SiteChrome";
 import { paymentsEnabled, site } from "@/lib/config";
 import { cohortOne, formatWhen } from "@/lib/launch";
+import { ADDON_PAGE } from "@/lib/addon";
 import { LEVEL_LABEL, parseLevel, parsePath, pathLabel, planSummary, type CareerPath, type LevelId } from "@/lib/levels";
 import { processSuccessfulCharge } from "@/lib/payments";
 import { parseMetadata, verifyTransaction } from "@/lib/paystack";
@@ -77,6 +79,7 @@ export default async function Welcome({
         <div className="wrap welcome">
           {state === "paid" ? (
             <>
+              <RememberOwned path={path} level={level} />
               <p className="status-pill ok">
                 <IconCheck size={14} strokeWidth={2.5} aria-hidden="true" /> Payment
                 confirmed
@@ -96,7 +99,7 @@ export default async function Welcome({
                 <li>
                   <span className="num">1</span>
                   <div>
-                    <h3>Complete your career assessment</h3>
+                    <h2>Complete your career assessment</h2>
                     <p>
                       About ten minutes. Your answers shape your personalized
                       plan.
@@ -115,7 +118,7 @@ export default async function Welcome({
                 <li>
                   <span className="num">2</span>
                   <div>
-                    <h3>Get your Notion workspace</h3>
+                    <h2>Get your Notion workspace</h2>
                     <p>
                       Create a free Notion account with the same email you paid
                       with. We&rsquo;ll share{" "}
@@ -124,6 +127,11 @@ export default async function Welcome({
                         : "the workspace for the path and level you chose"}
                       , with Job Hunt OS, Portfolio Builder and the Interview
                       Preparation System inside it.
+                    </p>
+                    <p className="muted">
+                      This is a personal licence for you only. Duplicate it
+                      into your own Notion and edit it as you like, but please
+                      don&rsquo;t share it or its link with anyone else.
                     </p>
                     {site.notionAccessUrl ? (
                       <a
@@ -138,9 +146,9 @@ export default async function Welcome({
                 <li>
                   <span className="num">3</span>
                   <div>
-                    <h3>
+                    <h2>
                       {c1.name} starts {cohortStart}
-                    </h3>
+                    </h2>
                     <p>
                       We&rsquo;ll send the weekly schedule by email and WhatsApp
                       before the start.
@@ -157,6 +165,11 @@ export default async function Welcome({
                   </div>
                 </li>
               </ol>
+              <p className="muted" style={{ marginTop: 28 }} data-add-level-link>
+                Chose the wrong level? Each extra level is an additional fee,
+                shown before you pay.{" "}
+                <Link href={ADDON_PAGE}>Get another level</Link>.
+              </p>
             </>
           ) : state === "pending" ? (
             <>

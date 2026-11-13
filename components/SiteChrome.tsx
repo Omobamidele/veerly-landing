@@ -104,6 +104,12 @@ export function Footer({ belief = site.belief }: { belief?: string }) {
         >
           <Link
             className="text-ink-2 no-underline hover:text-ink"
+            href="/add-level"
+          >
+            Get another level
+          </Link>
+          <Link
+            className="text-ink-2 no-underline hover:text-ink"
             href="/privacy"
           >
             Privacy

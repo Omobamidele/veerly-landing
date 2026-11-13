@@ -3,7 +3,7 @@ import { brevoSink } from "./brevo";
 import { notionSink } from "./notion";
 import { webhookSink } from "./webhook";
 
-export type SinkEvent = "signup.created" | "signup.updated" | "profile.updated" | "payment.succeeded";
+export type SinkEvent = "signup.created" | "signup.updated" | "profile.updated" | "payment.succeeded" | "addon.paid";
 
 /**
  * A sink mirrors store changes into another tool (email platform, Notion, Google Sheet via webhook).

@@ -133,6 +133,8 @@ I('wrench','Google IT Support',
   '<path d="M13.4 10.25H4a1.75 1.75 0 0 0 0 3.5h9.4"/><path d="M21 9.1l-2.6 1.3v3.2l2.6 1.3A4.6 4.6 0 1 1 21 9.1z"/></g>')
 
 # ---------- Interface (landing page) ----------
+I('levels','Level check',
+  N(16,3.5,5,8)+'<rect x="3" y="14" width="5" height="6.5" rx="1.5"/><rect x="9.5" y="9" width="5" height="11.5" rx="1.5"/><rect x="16" y="3.5" width="5" height="17" rx="1.5"/>',ui=True)
 I('arrow-right','Arrow right','<path d="M4.5 12h14.5M13.5 6.5L19 12l-5.5 5.5"/>',ui=True)
 I('arrow-down','Arrow down','<path d="M12 4.5V19M6.5 13.5L12 19l5.5-5.5"/>',ui=True)
 I('check','Check','<path d="M4.5 12.8l4.6 4.5L19.5 6.8"/>',ui=True)
@@ -140,6 +142,8 @@ I('chevron-down','Chevron down','<path d="M6.5 9.5l5.5 5.5 5.5-5.5"/>',ui=True)
 I('chevron-up','Chevron up','<path d="M6.5 14.5L12 9l5.5 5.5"/>',ui=True)
 I('clock','Clock','<circle cx="12" cy="12" r="8.75"/><path d="M12 7.5V12l3 2"/>',ui=True)
 I('lock','Lock','<path class="a" d="M7.5 10.5h9a3 3 0 0 1 3 3V18a3 3 0 0 1-3 3h-9a3 3 0 0 1-3-3v-4.5a3 3 0 0 1 3-3z"/><rect x="4.5" y="10.5" width="15" height="10.5" rx="3"/><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5M12 14.5V17"/>',ui=True)
+I('close','Close','<path d="M6 6l12 12M18 6L6 18"/>',ui=True)
+I('arrow-left','Arrow left','<path d="M19.5 12H5M10.5 6.5L5 12l5.5 5.5"/>',ui=True)
 I('restart','Restart','<path d="M4.5 12a7.5 7.5 0 1 0 2.4-5.5L4.5 8.8M4.5 4.5v4.3h4.3"/>',ui=True)
 I('spinner','Loading','<circle cx="12" cy="12" r="8.5" opacity=".2"/><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5"/>',ui=True)
 

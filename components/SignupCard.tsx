@@ -2,6 +2,16 @@
 
 import { IconArrowRight, IconCalendarPlus, IconCheck, IconLock } from "@/components/icons/veerly-icons";
 import { useMemo, useRef, useState } from "react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -165,7 +175,7 @@ function WaitlistFlow({
   cohortWindow: string;
 }) {
   const { shortLabel, launched } = useLaunch();
-  const { path, pathLabel, level, label: levelName } = useLevel();
+  const { path, pathLabel, level, levelSource, label: levelName } = useLevel();
   const countries = useMemo(() => countryOptions(), []);
   const [step, setStep] = useState<Step>("join");
   const [busy, setBusy] = useState(false);
@@ -231,6 +241,7 @@ function WaitlistFlow({
         ...v,
         whatsappCountry: dial,
         level,
+        levelSource,
         careerPath: path,
       });
       if (!r.ok) {
@@ -656,8 +667,10 @@ function CheckoutPanel({
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Errors>({});
   const [message, setMessage] = useState("");
-  const { currency, price, chargePrice } = useCurrency();
-  const { path, pathLabel, level, label: levelName } = useLevel();
+  const { currency, price, chargePrice, levelChangePrice } = useCurrency();
+  const { path, pathLabel, level, levelSource, label: levelName } = useLevel();
+  const [confirming, setConfirming] = useState(false);
+  const pending = useRef<Record<string, string> | null>(null);
 
   async function submit(ev: React.FormEvent<HTMLFormElement>) {
     ev.preventDefault();
@@ -675,10 +688,19 @@ function CheckoutPanel({
       return;
     }
     setErrors({});
+    // Ask them to be sure about the level before we open Paystack.
+    pending.current = v;
+    setConfirming(true);
+  }
+
+  async function pay() {
+    const v = pending.current;
+    if (!v) return;
+    setConfirming(false);
     setBusy(true);
     setMessage("");
     try {
-      const r = await post("/api/checkout", { ...v, currency, level, careerPath: path });
+      const r = await post("/api/checkout", { ...v, currency, level, levelSource, careerPath: path });
       if (r.ok && r.json.url) {
         window.location.assign(r.json.url);
         return;
@@ -708,7 +730,7 @@ function CheckoutPanel({
         sub={`${price}, one-time. Everything included.`}
       />
       <div
-        className="flex flex-col gap-1 rounded-lg border border-line bg-ground px-4 py-3 text-sm"
+        className="flex flex-col gap-1 border-y border-line py-3 text-sm"
         data-checkout-summary
       >
         <p className="font-medium text-ink">
@@ -803,6 +825,40 @@ function CheckoutPanel({
         Not ready yet? Join the waitlist instead
       </button>
       <Alert msg={message} />
+      <AlertDialog open={confirming} onOpenChange={setConfirming}>
+        <AlertDialogContent data-level-confirm>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Be sure of your level</AlertDialogTitle>
+            <AlertDialogDescription>
+              You chose{" "}
+              <strong className="font-semibold text-ink">{levelName}</strong>{" "}
+              level{pathLabel ? ` for ${pathLabel}` : ""}. After you pay, each
+              extra level is an additional fee of{" "}
+              <strong className="tnum font-semibold text-ink">
+                {levelChangePrice}
+              </strong>
+              .
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel
+              onClick={() => {
+                requestAnimationFrame(() =>
+                  document.getElementById("levels")?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  }),
+                );
+              }}
+            >
+              Change my level
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={pay}>
+              Yes, continue to payment
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </form>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
-import { IconCheck } from "@/components/icons/veerly-icons";
+import Link from "next/link";
+import { IconArrowRight, IconCheck } from "@/components/icons/veerly-icons";
 import { Button } from "@/components/ui/button";
 import {
   NativeSelect,
@@ -14,8 +15,10 @@ import {
   type LevelId,
 } from "@/lib/levels";
 import { cn } from "@/lib/utils";
-import { Price } from "./Currency";
+import { LevelChangeFee, Price } from "./Currency";
+import LevelQuiz from "./LevelQuiz";
 import { useLevel } from "./LevelProvider";
+
 
 function chooseAndJoin(
   setPlan: (path: CareerPath, level: LevelId) => void,
@@ -113,8 +116,46 @@ export default function LevelChoice({
           </ul>
         </div>
 
+        <div
+          className="flex flex-col gap-6 border-y border-white/15 py-7 sm:flex-row sm:items-center sm:justify-between sm:gap-10 sm:py-8"
+          data-level-check
+        >
+          <div className="flex min-w-0 flex-col gap-2.5">
+            <p className="flex items-center gap-2.5 text-[13px] font-medium text-yellow">
+              <span
+                aria-hidden="true"
+                className="h-3 w-5 shrink-0 bg-yellow [clip-path:polygon(0_0,100%_0,100%_100%,29%_100%)]"
+              />
+              Level check, about a minute
+            </p>
+            <p className="font-display text-[24px] leading-tight font-extrabold tracking-[-0.025em] text-balance text-white sm:text-[28px]">
+              Not sure which level fits you?
+            </p>
+            <p className="max-w-[52ch] text-[15px] leading-relaxed text-white/75">
+              Five short questions in plain words. We suggest one, and you
+              choose.
+            </p>
+          </div>
+          <LevelQuiz
+            trigger={
+              <Button
+                type="button"
+                size="lg"
+                variant="stage"
+                className="shrink-0 sm:max-w-[22rem]"
+              >
+                Not sure? Take the 1-minute level check
+                <IconArrowRight data-icon="inline-end" />
+              </Button>
+            }
+          />
+        </div>
+
         {cards ? (
-          <ul className="grid items-stretch gap-4 lg:grid-cols-3 lg:gap-5">
+          <ul
+            id="level-cards"
+            className="grid scroll-mt-24 items-stretch gap-4 lg:grid-cols-3 lg:gap-5"
+          >
             {cards.map((card) => {
               const selected = level === card.id;
               return (
@@ -209,10 +250,23 @@ export default function LevelChoice({
           </p>
         )}
 
-        <p className="-mt-4 text-[13px] text-white/60">
-          These describe skills you can show at the end of the cohort. They are
-          not a job guarantee.
-        </p>
+        <div className="-mt-4 flex max-w-[68ch] flex-col gap-2 text-[15px] leading-relaxed text-white/80">
+          <p data-level-switch>
+            Be sure before you choose. Picking a level now is free. Each extra
+            level you want after you pay is an additional fee of{" "}
+            <LevelChangeFee className="font-medium text-yellow" />.{" "}
+            <Link
+              href="/add-level"
+              className="rounded-sm font-medium text-yellow underline underline-offset-4 outline-none focus-visible:ring-3 focus-visible:ring-yellow/60"
+            >
+              Chose the wrong level?
+            </Link>
+          </p>
+          <p className="text-[13px] text-white/60">
+            These describe skills you can show at the end of the cohort. They
+            are not a job guarantee.
+          </p>
+        </div>
       </div>
     </section>
   );
